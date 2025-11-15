@@ -515,7 +515,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
     );
   }
 }
-
+//
 class CustomTextField extends StatelessWidget {
   final String label;
   final String hintText;
