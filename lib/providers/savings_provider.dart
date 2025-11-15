@@ -79,3 +79,5 @@ final transactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final firebaseService = ref.watch(firebaseServiceProvider);
   return firebaseService.getAllTransactions();
 });
+
+

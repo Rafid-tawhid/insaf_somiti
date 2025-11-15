@@ -5,6 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/members.dart';
 import '../providers/member_providers.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/members.dart';
+import '../providers/member_providers.dart';
+
 class MemberEntryScreen extends ConsumerStatefulWidget {
   const MemberEntryScreen({Key? key}) : super(key: key);
 
@@ -15,218 +22,132 @@ class MemberEntryScreen extends ConsumerStatefulWidget {
 class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   final List<TextEditingController> _controllers = List.generate(12, (_) => TextEditingController());
+  final FocusNode _mobileFocusNode = FocusNode();
+  bool _isCheckingMobile = false;
+  bool _isMobileUnique = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _mobileFocusNode.addListener(_onMobileFocusChange);
+  }
+
+  void _onMobileFocusChange() {
+    if (!_mobileFocusNode.hasFocus && _controllers[3].text.isNotEmpty) {
+      _checkMobileUnique(_controllers[3].text);
+    }
+  }
+
+  Future<void> _checkMobileUnique(String mobile) async {
+    if (mobile.isEmpty) return;
+
+    setState(() {
+      _isCheckingMobile = true;
+      _isMobileUnique = true;
+    });
+
+    try {
+      final firebaseService = ref.read(firebaseServiceProvider);
+      final snapshot = await FirebaseFirestore.instance
+          .collection('members')
+          .where('memberMobile', isEqualTo: mobile)
+          .limit(1)
+          .get();
+
+      setState(() {
+        _isMobileUnique = snapshot.docs.isEmpty;
+      });
+    } catch (e) {
+      print('Error checking mobile uniqueness: $e');
+    } finally {
+      setState(() {
+        _isCheckingMobile = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();
     }
+    _mobileFocusNode.dispose();
     super.dispose();
   }
-  final List<Member> dummyMembers = [
-    Member(
-      id: '1',
-      memberNumber: 'M001',
-      memberName: 'Rahim Uddin',
-      fatherOrHusbandName: 'Karim Uddin',
-      memberMobile: '01711000001',
-      nationalIdOrBirthCertificate: '1234567890',
-      nomineeName: 'Ayesha Rahman',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000001',
-      nomineeNationalId: '9876543210',
-      guarantorName: 'Hasan Ali',
-      guarantorNationalId: '1111111111',
-      guarantorMobile: '01733000001',
-      totalSavings: 25000.50,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-    ),
-    Member(
-      id: '2',
-      memberNumber: 'M002',
-      memberName: 'Sadia Akter',
-      fatherOrHusbandName: 'Jamal Hossain',
-      memberMobile: '01711000002',
-      nationalIdOrBirthCertificate: '2234567890',
-      nomineeName: 'Shahadat Hossain',
-      nomineeRelation: 'Brother',
-      nomineeMobile: '01722000002',
-      nomineeNationalId: '8876543210',
-      guarantorName: 'Rafiq Ahmed',
-      guarantorNationalId: '2222222222',
-      guarantorMobile: '01733000002',
-      totalSavings: 42000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-    ),
-    Member(
-      id: '3',
-      memberNumber: 'M003',
-      memberName: 'Abdullah Al Mamun',
-      fatherOrHusbandName: 'Nurul Islam',
-      memberMobile: '01711000003',
-      nationalIdOrBirthCertificate: '3234567890',
-      nomineeName: 'Farzana Yeasmin',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000003',
-      nomineeNationalId: '7876543210',
-      guarantorName: 'Mehedi Hasan',
-      guarantorNationalId: '3333333333',
-      guarantorMobile: '01733000003',
-      totalSavings: 15500.75,
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-    ),
-    Member(
-      id: '4',
-      memberNumber: 'M004',
-      memberName: 'Nusrat Jahan',
-      fatherOrHusbandName: 'Abdul Gafur',
-      memberMobile: '01711000004',
-      nationalIdOrBirthCertificate: '4234567890',
-      nomineeName: 'Sajid Khan',
-      nomineeRelation: 'Husband',
-      nomineeMobile: '01722000004',
-      nomineeNationalId: '6876543210',
-      guarantorName: 'Fahim Reza',
-      guarantorNationalId: '4444444444',
-      guarantorMobile: '01733000004',
-      totalSavings: 38000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    Member(
-      id: '5',
-      memberNumber: 'M005',
-      memberName: 'Tania Rahman',
-      fatherOrHusbandName: 'Abdul Halim',
-      memberMobile: '01711000005',
-      nationalIdOrBirthCertificate: '5234567890',
-      nomineeName: 'Sadia Halim',
-      nomineeRelation: 'Sister',
-      nomineeMobile: '01722000005',
-      nomineeNationalId: '5876543210',
-      guarantorName: 'Mizanur Rahman',
-      guarantorNationalId: '5555555555',
-      guarantorMobile: '01733000005',
-      totalSavings: 5000.00,
-      createdAt: DateTime.now(),
-    ),
-    Member(
-      id: '6',
-      memberNumber: 'M006',
-      memberName: 'Arif Hossain',
-      fatherOrHusbandName: 'Latif Hossain',
-      memberMobile: '01711000006',
-      nationalIdOrBirthCertificate: '6234567890',
-      nomineeName: 'Nasrin Akter',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000006',
-      nomineeNationalId: '4876543210',
-      guarantorName: 'Jubair Rahman',
-      guarantorNationalId: '6666666666',
-      guarantorMobile: '01733000006',
-      totalSavings: 27500.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 40)),
-    ),
-    Member(
-      id: '7',
-      memberNumber: 'M007',
-      memberName: 'Sumaiya Islam',
-      fatherOrHusbandName: 'Ruhul Amin',
-      memberMobile: '01711000007',
-      nationalIdOrBirthCertificate: '7234567890',
-      nomineeName: 'Sajjad Hossain',
-      nomineeRelation: 'Brother',
-      nomineeMobile: '01722000007',
-      nomineeNationalId: '3876543210',
-      guarantorName: 'Sharif Uddin',
-      guarantorNationalId: '7777777777',
-      guarantorMobile: '01733000007',
-      totalSavings: 19000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 20)),
-    ),
-    Member(
-      id: '8',
-      memberNumber: 'M008',
-      memberName: 'Mahmudul Hasan',
-      fatherOrHusbandName: 'Harun Rashid',
-      memberMobile: '01711000008',
-      nationalIdOrBirthCertificate: '8234567890',
-      nomineeName: 'Shirin Akter',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000008',
-      nomineeNationalId: '2876543210',
-      guarantorName: 'Tariqul Islam',
-      guarantorNationalId: '8888888888',
-      guarantorMobile: '01733000008',
-      totalSavings: 31000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-    Member(
-      id: '9',
-      memberNumber: 'M009',
-      memberName: 'Rafiqul Alam',
-      fatherOrHusbandName: 'Abdul Motaleb',
-      memberMobile: '01711000009',
-      nationalIdOrBirthCertificate: '9234567890',
-      nomineeName: 'Nazma Begum',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000009',
-      nomineeNationalId: '1876543210',
-      guarantorName: 'Mofizul Karim',
-      guarantorNationalId: '9999999999',
-      guarantorMobile: '01733000009',
-      totalSavings: 46000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 7)),
-    ),
-    Member(
-      id: '10',
-      memberNumber: 'M010',
-      memberName: 'Sabbir Ahmed',
-      fatherOrHusbandName: 'Abdur Rahman',
-      memberMobile: '01711000010',
-      nationalIdOrBirthCertificate: '1023456789',
-      nomineeName: 'Mim Akter',
-      nomineeRelation: 'Wife',
-      nomineeMobile: '01722000010',
-      nomineeNationalId: '0876543210',
-      guarantorName: 'Kamrul Islam',
-      guarantorNationalId: '1010101010',
-      guarantorMobile: '01733000010',
-      totalSavings: 52000.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-  ];
-
-
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final member = ref.read(memberFormProvider);
-        final firebaseService = ref.read(firebaseServiceProvider);
-        await firebaseService.addMember(member);
+    if (!_formKey.currentState!.validate()) return;
 
-        // Reset form
-        ref.read(memberFormProvider.notifier).resetForm();
-        for (var controller in _controllers) {
-          controller.clear();
-        }
+    if (!_isMobileUnique) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে!'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
+    if (_isCheckingMobile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('দয়া করে মোবাইল নম্বর চেক হওয়ার জন্য অপেক্ষা করুন'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final member = ref.read(memberFormProvider);
+      final firebaseService = ref.read(firebaseServiceProvider);
+
+      // Final check for mobile uniqueness
+      final snapshot = await FirebaseFirestore.instance
+          .collection('members')
+          .where('memberMobile', isEqualTo: member.memberMobile)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('সদস্য সফলভাবে যোগ করা হয়েছে!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ত্রুটি: $e'),
+            content: const Text('এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে!'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
         );
+        return;
       }
+
+      await firebaseService.addMember(member);
+
+      // Reset form
+      ref.read(memberFormProvider.notifier).resetForm();
+      for (var controller in _controllers) {
+        controller.clear();
+      }
+      setState(() {
+        _isMobileUnique = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('সদস্য সফলভাবে যোগ করা হয়েছে!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('ত্রুটি: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -255,6 +176,11 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
           key: _formKey,
           child: Column(
             children: [
+              // Info Card
+              _buildInfoCard(),
+
+              const SizedBox(height: 16),
+
               // Member Information Card
               _buildSectionCard(
                 title: 'সদস্যের তথ্য',
@@ -266,6 +192,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[0],
                     onChanged: memberNotifier.updateMemberNumber,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'সদস্য নং প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'সদস্যের নাম',
@@ -273,6 +205,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[1],
                     onChanged: memberNotifier.updateMemberName,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'সদস্যের নাম প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'পিতা/স্বামীর নাম',
@@ -280,14 +218,51 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[2],
                     onChanged: memberNotifier.updateFatherOrHusbandName,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'পিতা/স্বামীর নাম প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'সদস্যের মোবাইল নং',
                     hintText: '01XXXXXXXXX',
                     keyboardType: TextInputType.phone,
                     controller: _controllers[3],
-                    onChanged: memberNotifier.updateMemberMobile,
+                    focusNode: _mobileFocusNode,
+                    onChanged: (value) {
+                      memberNotifier.updateMemberMobile(value);
+                      if (value.length == 11) {
+                        _checkMobileUnique(value);
+                      }
+                    },
                     isRequired: true,
+                    suffix: _isCheckingMobile
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : _controllers[3].text.isNotEmpty
+                        ? Icon(
+                      _isMobileUnique ? Icons.check_circle : Icons.error,
+                      color: _isMobileUnique ? Colors.green : Colors.red,
+                      size: 20,
+                    )
+                        : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'মোবাইল নম্বর প্রয়োজন';
+                      }
+                      if (value.length != 11 || !value.startsWith('01')) {
+                        return 'সঠিক মোবাইল নম্বর লিখুন';
+                      }
+                      if (!_isMobileUnique) {
+                        return 'এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'জাতীয় পরিচয় পত্র/জন্ম নিবন্ধন নং',
@@ -296,11 +271,17 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[4],
                     onChanged: memberNotifier.updateNationalId,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'জাতীয় পরিচয় পত্র/জন্ম নিবন্ধন নং প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Nominee Information Card
               _buildSectionCard(
@@ -313,6 +294,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[5],
                     onChanged: memberNotifier.updateNomineeName,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'নমিনির নাম প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'নমিনির সম্পর্ক',
@@ -320,6 +307,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[6],
                     onChanged: memberNotifier.updateNomineeRelation,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'নমিনির সম্পর্ক প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'নমিনির মোবাইল নং',
@@ -328,6 +321,15 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[7],
                     onChanged: memberNotifier.updateNomineeMobile,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'নমিনির মোবাইল নম্বর প্রয়োজন';
+                      }
+                      if (value.length != 11 || !value.startsWith('01')) {
+                        return 'সঠিক মোবাইল নম্বর লিখুন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'নমিনির জাতীয় পরিচয় পত্র',
@@ -336,11 +338,17 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[8],
                     onChanged: memberNotifier.updateNomineeNationalId,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'নমিনির জাতীয় পরিচয় পত্র প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Guarantor Information Card
               _buildSectionCard(
@@ -353,6 +361,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[9],
                     onChanged: memberNotifier.updateGuarantorName,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'জামিনদারের নাম প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'জামিনদারের জাতীয় পরিচয় পত্র',
@@ -361,6 +375,12 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[10],
                     onChanged: memberNotifier.updateGuarantorNationalId,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'জামিনদারের জাতীয় পরিচয় পত্র প্রয়োজন';
+                      }
+                      return null;
+                    },
                   ),
                   CustomTextField(
                     label: 'জামিনদারের মোবাইল নং',
@@ -369,36 +389,77 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     controller: _controllers[11],
                     onChanged: memberNotifier.updateGuarantorMobile,
                     isRequired: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'জামিনদারের মোবাইল নম্বর প্রয়োজন';
+                      }
+                      if (value.length != 11 || !value.startsWith('01')) {
+                        return 'সঠিক মোবাইল নম্বর লিখুন';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               // Submit Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Text(
-                    'সদস্য সংরক্ষণ করুন',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
+              _buildSubmitButton(),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info, color: Colors.blue[700], size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'সকল তথ্য সঠিকভাবে পূরণ করুন। মোবাইল নম্বর ইউনিক হতে হবে।',
+              style: TextStyle(
+                color: Colors.blue[800],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: _submitForm,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green[700],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+        ),
+        icon: const Icon(Icons.save, color: Colors.white),
+        label: const Text(
+          'সদস্য সংরক্ষণ করুন',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ),
@@ -439,14 +500,14 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.green[700],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ...children,
           ],
         ),
@@ -454,13 +515,17 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
     );
   }
 }
+
 class CustomTextField extends StatelessWidget {
   final String label;
   final String hintText;
   final TextInputType keyboardType;
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final bool isRequired;
+  final Widget? suffix;
+  final String? Function(String?)? validator;
 
   const CustomTextField({
     Key? key,
@@ -468,8 +533,11 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.keyboardType = TextInputType.text,
     required this.controller,
+    this.focusNode,
     this.onChanged,
     this.isRequired = false,
+    this.suffix,
+    this.validator,
   }) : super(key: key);
 
   @override
@@ -510,10 +578,12 @@ class CustomTextField extends StatelessWidget {
               ),
             ],
           ),
-          child: TextField(
+          child: TextFormField(
             controller: controller,
+            focusNode: focusNode,
             onChanged: onChanged,
             keyboardType: keyboardType,
+            validator: validator,
             decoration: InputDecoration(
               hintText: hintText,
               border: OutlineInputBorder(
@@ -525,6 +595,16 @@ class CustomTextField extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
+              ),
+              suffixIcon: suffix != null
+                  ? Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: suffix,
+              )
+                  : null,
+              suffixIconConstraints: const BoxConstraints(
+                maxHeight: 20,
+                maxWidth: 20,
               ),
             ),
           ),

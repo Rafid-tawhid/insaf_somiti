@@ -27,23 +27,46 @@ class FirebaseService {
       }).toList();
     });
   }
+  //
+  // // NEW: Search members by name, ID, or phone
+  // Stream<List<Member>> searchMembers(String query) {
+  //   if (query.isEmpty) {
+  //     return getMembers();
+  //   }
+  //
+  //   return _firestore
+  //       .collection('members')
+  //       .where('memberName', isGreaterThanOrEqualTo: query)
+  //       .where('memberName', isLessThan: query + 'z')
+  //       .snapshots()
+  //       .map((snapshot) {
+  //     return snapshot.docs.map((doc) {
+  //       return Member.fromMap(doc.id, doc.data());
+  //     }).toList();
+  //   });
+  // }
 
-  // NEW: Search members by name, ID, or phone
+
+  // In your FirebaseService class
   Stream<List<Member>> searchMembers(String query) {
     if (query.isEmpty) {
-      return getMembers();
+      // CHANGE THIS LINE - return getMembers() instead of Stream.empty()
+      return getMembers(); // This will show all members when search is empty
     }
 
-    return _firestore
+    // Convert query to lowercase for case-insensitive search
+    final searchQuery = query.toLowerCase();
+
+    return FirebaseFirestore.instance
         .collection('members')
-        .where('memberName', isGreaterThanOrEqualTo: query)
-        .where('memberName', isLessThan: query + 'z')
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return Member.fromMap(doc.id, doc.data());
-      }).toList();
-    });
+        .map((snapshot) => snapshot.docs
+        .map((doc) => Member.fromMap(doc.id, doc.data()))
+        .where((member) =>
+    member.memberName.toLowerCase().contains(searchQuery) ||
+        member.memberNumber.toLowerCase().contains(searchQuery) ||
+        member.memberMobile.contains(searchQuery))
+        .toList());
   }
 
   // NEW: Add savings transaction

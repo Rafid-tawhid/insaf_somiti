@@ -27,17 +27,7 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
     super.dispose();
   }
 
-  void _showMemberSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => MemberSearchDialog(
-        onMemberSelected: (member) {
-          ref.read(loanFormProvider.notifier).selectMember(member);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
+
 
   Future<void> _submitLoan() async {
     final loanState = ref.read(loanFormProvider);
@@ -151,7 +141,14 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
               icon: Icons.person_search,
               children: [
                 GestureDetector(
-                  onTap: _showMemberSearchDialog,
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberSearchDialog(
+                      onMemberSelected: (member) {
+                        ref.read(loanFormProvider.notifier).selectMember(member);
+                        Navigator.pop(context);
+                      },
+                    )));
+                  },
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),

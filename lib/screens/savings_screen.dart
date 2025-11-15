@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
@@ -89,17 +90,7 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
     );
   }
 
-  void _showMemberSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => MemberSearchDialog(
-        onMemberSelected: (member) {
-          ref.read(savingsFormProvider.notifier).selectMember(member);
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +125,14 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
               icon: Icons.search,
               children: [
                 GestureDetector(
-                  onTap: _showMemberSearchDialog,
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberSearchDialog(
+                      onMemberSelected: (member) {
+                        ref.read(savingsFormProvider.notifier).selectMember(member);
+                        Navigator.pop(context);
+                      },
+                    )));
+                  },
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -287,6 +285,7 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             Row(
               children: [
                 Icon(icon, color: Colors.green[700], size: 24),
@@ -321,11 +320,10 @@ class MemberSearchDialog extends ConsumerWidget {
     final searchQuery = ref.watch(memberSearchQueryProvider);
     final membersAsync = ref.watch(searchedMembersProvider);
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        height: 500,
+    print('Current search query: "$searchQuery"'); // Debug print
+
+    return Scaffold(
+      body: SafeArea(
         child: Column(
           children: [
             TextField(
@@ -337,38 +335,50 @@ class MemberSearchDialog extends ConsumerWidget {
                 ),
               ),
               onChanged: (value) {
+                print('Search text changed to: "$value"'); // Debug print
                 ref.read(memberSearchQueryProvider.notifier).state = value;
               },
             ),
             const SizedBox(height: 16),
             Expanded(
               child: membersAsync.when(
-                data: (members) => ListView.builder(
-                  itemCount: members.length,
-                  itemBuilder: (context, index) {
-                    final member = members[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.green[100],
-                          child: Text(
-                            member.memberNumber.substring(0, 2),
-                            style: TextStyle(color: Colors.green[700]),
-                          ),
-                        ),
-                        title: Text(member.memberName),
-                        subtitle: Text('নং: ${member.memberNumber} | মোবাইল: ${member.memberMobile}'),
-                        trailing: Text('৳${member.totalSavings.toStringAsFixed(2)}'),
-                        onTap: () => onMemberSelected(member),
-                      ),
+                data: (members) {
+                  print('Found ${members.length} members'); // Debug print
+                  if (members.isEmpty && searchQuery.isNotEmpty) {
+                    return const Center(
+                      child: Text('কোন সদস্য পাওয়া যায়নি'),
                     );
-                  },
-                ),
+                  }
+                  return ListView.builder(
+                    itemCount: members.length,
+                    itemBuilder: (context, index) {
+                      final member = members[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.green[100],
+                            child: Text(
+                              '${index+1}',
+                              style: TextStyle(color: Colors.green[700]),
+                            ),
+                          ),
+                          title: Text(member.memberName),
+                          subtitle: Text('নং: ${member.memberNumber} | মোবাইল: ${member.memberMobile}'),
+                          trailing: Text('৳${member.totalSavings.toStringAsFixed(2)}'),
+                          onTap: () => onMemberSelected(member),
+                        ),
+                      );
+                    },
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Text('Error: $error'),
-                ),
+                error: (error, stack) {
+                  print('Search error: $error'); // Debug print
+                  return Center(
+                    child: Text('ত্রুটি: $error'),
+                  );
+                },
               ),
             ),
           ],
