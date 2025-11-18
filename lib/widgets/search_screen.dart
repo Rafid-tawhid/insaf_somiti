@@ -353,7 +353,7 @@ class MemberSearchDialog extends ConsumerWidget {
                       ),
                     ),
                   ),
-
+                  //
                   const SizedBox(width: 16),
 
                   // Member Details
