@@ -432,6 +432,7 @@ class MemberSearchDialog extends ConsumerWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        //
                         Text(
                           '৳${member.totalSavings.toStringAsFixed(2)}',
                           style: TextStyle(
