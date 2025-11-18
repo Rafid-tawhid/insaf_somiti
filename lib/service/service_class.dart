@@ -151,6 +151,21 @@ class FirebaseService {
   }
 
 
+  Stream<List<Transaction>> getAllTransactionsById(String id) {
+    return _firestore
+        .collection('transactions')
+        .where('memberId', isEqualTo: id) // <-- Filter by ID field
+        .orderBy('transactionDate', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Transaction.fromMap(doc.id, doc.data());
+      }).toList();
+    });
+  }
+
+
+
   // Add to your existing FirebaseService class
 
 
@@ -196,6 +211,19 @@ class FirebaseService {
     return _firestore
         .collection('loans')
         .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+
+
+  Stream<List<Loan>> getLoansById(String id) {
+    return _firestore
+        .collection('loans')
+        .orderBy('createdAt', descending: true).where('memberId',isEqualTo: id)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {

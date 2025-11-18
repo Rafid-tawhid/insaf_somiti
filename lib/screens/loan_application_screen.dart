@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
@@ -7,6 +8,8 @@ import '../models/loan_model.dart';
 import '../models/members.dart';
 import '../providers/loan_provider.dart';
 import '../providers/member_providers.dart';
+import '../service/service_class.dart';
+import 'member_transaction_info_list.dart';
 
 class LoanApplicationScreen extends ConsumerStatefulWidget {
   const LoanApplicationScreen({Key? key}) : super(key: key);
@@ -314,6 +317,16 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
                   color: Colors.orange[700],
                 ),
               ),
+              Spacer(),
+              IconButton(onPressed: () async {
+                FirebaseService service=FirebaseService();
+                Navigator.push(context, CupertinoPageRoute(builder: (context)=>CombinedHistoryScreen(
+                  memberId: member.id??'',
+                  transactionStream: service.getAllTransactionsById(member.id??''),
+                  loanStream: service.getLoansById(member.id??''),
+                )));
+
+              }, icon: Icon(Icons.info,color: Colors.green,))
             ],
           ),
           const SizedBox(height: 12),

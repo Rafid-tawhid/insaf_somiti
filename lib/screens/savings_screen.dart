@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
+import 'package:insaf_somiti/service/service_class.dart';
 import '../models/members.dart';
 import '../providers/member_providers.dart';
 import '../providers/savings_provider.dart';
+import 'member_transaction_info_list.dart';
 
 class SavingsEntryScreen extends ConsumerStatefulWidget {
   const SavingsEntryScreen({Key? key}) : super(key: key);
@@ -250,6 +253,16 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                   color: Colors.green[700],
                 ),
               ),
+              Spacer(),
+              IconButton(onPressed: () async {
+                FirebaseService service=FirebaseService();
+               Navigator.push(context, CupertinoPageRoute(builder: (context)=>CombinedHistoryScreen(
+                 memberId: member.id??'',
+                 transactionStream: service.getAllTransactionsById(member.id??''),
+                 loanStream: service.getLoansById(member.id??''),
+               )));
+
+              }, icon: Icon(Icons.info,color: Colors.green,))
             ],
           ),
           const SizedBox(height: 12),
