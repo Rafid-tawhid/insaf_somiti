@@ -7,6 +7,7 @@ import 'package:insaf_somiti/service/service_class.dart';
 import '../models/members.dart';
 import '../providers/member_providers.dart';
 import '../providers/savings_provider.dart';
+import '../widgets/search_screen.dart';
 import 'member_transaction_info_list.dart';
 
 class SavingsEntryScreen extends ConsumerStatefulWidget {
@@ -322,81 +323,3 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
   }
 }
 
-// Member Search Dialog
-class MemberSearchDialog extends ConsumerWidget {
-  final Function(Member) onMemberSelected;
-
-  const MemberSearchDialog({Key? key, required this.onMemberSelected}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final searchQuery = ref.watch(memberSearchQueryProvider);
-    final membersAsync = ref.watch(searchedMembersProvider);
-
-    print('Current search query: "$searchQuery"'); // Debug print
-
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'সদস্য খুঁজুন (নাম, নং বা মোবাইল)',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                print('Search text changed to: "$value"'); // Debug print
-                ref.read(memberSearchQueryProvider.notifier).state = value;
-              },
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: membersAsync.when(
-                data: (members) {
-                  print('Found ${members.length} members'); // Debug print
-                  if (members.isEmpty && searchQuery.isNotEmpty) {
-                    return const Center(
-                      child: Text('কোন সদস্য পাওয়া যায়নি'),
-                    );
-                  }
-                  return ListView.builder(
-                    itemCount: members.length,
-                    itemBuilder: (context, index) {
-                      final member = members[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.green[100],
-                            child: Text(
-                              '${index+1}',
-                              style: TextStyle(color: Colors.green[700]),
-                            ),
-                          ),
-                          title: Text(member.memberName),
-                          subtitle: Text('নং: ${member.memberNumber} | মোবাইল: ${member.memberMobile}'),
-                          trailing: Text('৳${member.totalSavings.toStringAsFixed(2)}'),
-                          onTap: () => onMemberSelected(member),
-                        ),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) {
-                  print('Search error: $error'); // Debug print
-                  return Center(
-                    child: Text('ত্রুটি: $error'),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

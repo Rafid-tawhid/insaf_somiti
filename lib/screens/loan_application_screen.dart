@@ -9,6 +9,7 @@ import '../models/members.dart';
 import '../providers/loan_provider.dart';
 import '../providers/member_providers.dart';
 import '../service/service_class.dart';
+import '../widgets/search_screen.dart';
 import 'member_transaction_info_list.dart';
 
 class LoanApplicationScreen extends ConsumerStatefulWidget {
