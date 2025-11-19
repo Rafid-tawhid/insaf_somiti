@@ -12,9 +12,10 @@ class Member {
   final String guarantorName;
   final String guarantorNationalId;
   final String guarantorMobile;
-  final double totalSavings; // NEW: Total savings amount
+  final double totalSavings;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final bool isActive; // NEW FIELD
 
   Member({
     this.id,
@@ -30,9 +31,10 @@ class Member {
     required this.guarantorName,
     required this.guarantorNationalId,
     required this.guarantorMobile,
-    this.totalSavings = 0.0, // Initialize with 0
+    this.totalSavings = 0.0,
     required this.createdAt,
     this.updatedAt,
+    this.isActive = true, // DEFAULT VALUE
   });
 
   Member copyWith({
@@ -52,6 +54,7 @@ class Member {
     double? totalSavings,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isActive,
   }) {
     return Member(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class Member {
       totalSavings: totalSavings ?? this.totalSavings,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -87,9 +91,10 @@ class Member {
       'guarantorName': guarantorName,
       'guarantorNationalId': guarantorNationalId,
       'guarantorMobile': guarantorMobile,
-      'totalSavings': totalSavings, // NEW
+      'totalSavings': totalSavings,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
+      'isActive': isActive, // ADDED
     };
   }
 
@@ -108,11 +113,12 @@ class Member {
       guarantorName: map['guarantorName'] ?? '',
       guarantorNationalId: map['guarantorNationalId'] ?? '',
       guarantorMobile: map['guarantorMobile'] ?? '',
-      totalSavings: (map['totalSavings'] ?? 0.0).toDouble(), // NEW
+      totalSavings: (map['totalSavings'] ?? 0.0).toDouble(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
       updatedAt: map['updatedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'])
           : null,
+      isActive: map['isActive'] ?? true, // ADDED
     );
   }
 }

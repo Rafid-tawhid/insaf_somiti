@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:insaf_somiti/screens/all_members_screen.dart';
 import 'package:insaf_somiti/screens/loan_application_screen.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
 import 'package:insaf_somiti/screens/savings_screen.dart';
@@ -694,10 +695,9 @@ class HomePage extends StatelessWidget {
                   crossAxisSpacing: 15,
                   mainAxisSpacing: 15,
                   children: [
-                    _buildActionCard('💰 ঋণ', Icons.attach_money, Colors.blue,context,1),
-                    _buildActionCard('💳 সঞ্চয়', Icons.savings, Colors.green,context,2),
-                    _buildActionCard('📊 রিপোর্ট', Icons.analytics, Colors.orange,context,3),
-                    _buildActionCard('👥 প্রোফাইল', Icons.person, Colors.purple,context,4),
+                    _buildActionCard('👥 প্রোফাইল', Icons.person, Colors.purple,context,1),
+                    _buildActionCard('💰 ক্যাশ বক্স', Icons.attach_money, Colors.blue,context,2),
+
                   ],
                 ),
               ),
@@ -713,22 +713,22 @@ class HomePage extends StatelessWidget {
       elevation: 3,
       child: InkWell(
         onTap: () {
-          if(index==4){
+          if(index==2){
             //SavingsEntryScreen
             Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberEntryScreen()));
           }
 
-          if(index==2){
-            //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>SavingsEntryScreen()));
-          }
-          if(index==3){
-            //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>CombinedReportScreen()));
-          }
+          // if(index==2){
+          //   //SavingsEntryScreen
+          //   Navigator.push(context, MaterialPageRoute(builder: (context)=>SavingsEntryScreen()));
+          // }
+          // if(index==3){
+          //   //SavingsEntryScreen
+          //   Navigator.push(context, MaterialPageRoute(builder: (context)=>CombinedReportScreen()));
+          // }
           if(index==1){
             //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>LoanApplicationScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberListScreen()));
           }
 
         },
