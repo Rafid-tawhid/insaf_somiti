@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:insaf_somiti/screens/savings_screen.dart';
 import '../models/members.dart';
 
 class MemberDetailsScreen extends StatelessWidget {
@@ -448,7 +449,9 @@ class MemberDetailsScreen extends StatelessWidget {
   }
 
   void _navigateToHisab(BuildContext context, Member member) {
-
+    Navigator.push(context, MaterialPageRoute(builder: (context)=>SavingsEntryScreen(
+      memberId: member.id.toString(),
+    )));
   }
 
   void _navigateToLoan(BuildContext context, Member member) {

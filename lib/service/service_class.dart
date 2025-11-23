@@ -78,28 +78,24 @@ class FirebaseService {
     String? notes,
   }) async {
     try {
-      // Start a batch write for atomic operation
-      final batch = _firestore.batch();
+      // Get member details and current balance
+      final member = await getMemberById(memberId);
+      final transactions = await getAllTransactionsById(memberId).first;
 
-      // Get member reference
-      final memberRef = _firestore.collection('members').doc(memberId);
-      final memberDoc = await memberRef.get();
-
-      if (!memberDoc.exists) {
-        throw Exception('Member not found');
+      // Calculate current balance
+      double currentBalance = 0;
+      for (final transaction in transactions) {
+        if (transaction.transactionType == 'savings') {
+          currentBalance += transaction.amount;
+        } else if (transaction.transactionType == 'withdrawal') {
+          currentBalance -= transaction.amount;
+        }
       }
 
-      final member = Member.fromMap(memberDoc.id, memberDoc.data()!);
-      final newBalance = member.totalSavings + amount;
+      // Calculate new balance after savings
+      final newBalance = currentBalance + amount;
 
-      // Update member's total savings
-      batch.update(memberRef, {
-        'totalSavings': newBalance,
-        'updatedAt': DateTime.now().millisecondsSinceEpoch,
-      });
-
-      // Create transaction record
-      final transactionRef = _firestore.collection('transactions').doc();
+      // Create savings transaction
       final transaction = Transaction(
         memberId: memberId,
         memberName: member.memberName,
@@ -114,12 +110,14 @@ class FirebaseService {
         transactionDate: DateTime.now(),
       );
 
-      batch.set(transactionRef, transaction.toMap());
+      // Add to Firestore
+      await _firestore.collection('transactions').add(transaction.toMap());
 
-      // Commit both operations
-      await batch.commit();
+      // Update member's total savings
+      await updateMemberSavings(memberId, newBalance);
+
     } catch (e) {
-      throw Exception('Failed to add savings: $e');
+      throw Exception('সঞ্চয় যোগ করতে সমস্যা: $e');
     }
   }
 
@@ -273,6 +271,88 @@ class FirebaseService {
         return Transaction.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     });
+  }
+
+
+  Future<void> addWithdrawal({
+    required String memberId,
+    required double amount,
+    required String agentId,
+    required String agentName,
+    String? notes,
+  }) async {
+    try {
+      // Get member details and current balance
+      final member = await getMemberById(memberId);
+      final transactions = await getAllTransactionsById(memberId).first;
+
+      // Calculate current balance from transactions
+      double currentBalance = 0;
+      for (final transaction in transactions) {
+        if (transaction.transactionType == 'savings') {
+          currentBalance += transaction.amount;
+        } else if (transaction.transactionType == 'withdrawal') {
+          currentBalance -= transaction.amount;
+        }
+      }
+
+      // Check if sufficient balance exists
+      if (amount > currentBalance) {
+        throw Exception('পর্যাপ্ত ব্যালেন্স নেই। বর্তমান ব্যালেন্স: ৳${currentBalance.toStringAsFixed(2)}');
+      }
+
+      // Calculate new balance after withdrawal
+      final newBalance = currentBalance - amount;
+
+      // Create withdrawal transaction
+      final transaction = Transaction(
+        memberId: memberId,
+        memberName: member.memberName,
+        memberNumber: member.memberNumber,
+        memberMobile: member.memberMobile,
+        transactionType: 'withdrawal',
+        amount: amount,
+        balanceAfter: newBalance,
+        agentId: agentId,
+        agentName: agentName,
+        notes: notes,
+        transactionDate: DateTime.now(),
+      );
+
+      // Add to Firestore
+      await _firestore.collection('transactions').add(transaction.toMap());
+
+      // Update member's total savings
+      await updateMemberSavings(memberId, newBalance);
+
+    } catch (e) {
+      throw Exception('উত্তোলন করতে সমস্যা: $e');
+    }
+  }
+
+  Future<Member> getMemberById(String memberId) async {
+    try {
+      final doc = await _firestore.collection('members').doc(memberId).get();
+
+      if (!doc.exists) {
+        throw Exception('সদস্য পাওয়া যায়নি');
+      }
+
+      return Member.fromMap(doc.id, doc.data()!);
+    } catch (e) {
+      throw Exception('সদস্য তথ্য লোড করতে সমস্যা: $e');
+    }
+  }
+
+  Future<void> updateMemberSavings(String memberId, double newBalance) async {
+    try {
+      await _firestore.collection('members').doc(memberId).update({
+        'totalSavings': newBalance,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      throw Exception('সদস্যের ব্যালেন্স আপডেট করতে সমস্যা: $e');
+    }
   }
 }
 

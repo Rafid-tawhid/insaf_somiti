@@ -1,17 +1,29 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:insaf_somiti/screens/profile_entry_screen.dart';
-import 'package:insaf_somiti/service/service_class.dart';
-import '../models/members.dart';
+import 'package:intl/intl.dart';
 import '../providers/member_providers.dart';
 import '../providers/savings_provider.dart';
-import '../widgets/search_screen.dart';
-import 'member_transaction_info_list.dart';
+import '../models/transaction_model.dart';
+
+
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../providers/member_providers.dart';
+import '../providers/savings_provider.dart';
+import '../models/transaction_model.dart';
 
 class SavingsEntryScreen extends ConsumerStatefulWidget {
-  const SavingsEntryScreen({Key? key}) : super(key: key);
+  final String memberId;
+
+  const SavingsEntryScreen({
+    Key? key,
+    required this.memberId,
+  }) : super(key: key);
 
   @override
   ConsumerState<SavingsEntryScreen> createState() => _SavingsEntryScreenState();
@@ -20,26 +32,19 @@ class SavingsEntryScreen extends ConsumerStatefulWidget {
 class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
-  final _searchController = TextEditingController();
+  String _selectedTransactionType = 'savings'; // 'savings' or 'withdrawal'
 
   @override
   void dispose() {
     _amountController.dispose();
     _notesController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _submitSavings() async {
-    final savingsState = ref.read(savingsFormProvider);
-    final member = savingsState.selectedMember;
+  Future<void> _submitTransaction() async {
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
 
-    if (member == null) {
-      _showError('দয়া করে একজন সদস্য নির্বাচন করুন');
-      return;
-    }
-
-    if (savingsState.amount <= 0) {
+    if (amount <= 0) {
       _showError('দয়া করে সঠিক পরিমাণ লিখুন');
       return;
     }
@@ -47,26 +52,30 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
     try {
       ref.read(savingsFormProvider.notifier).setLoading(true);
 
-      // In real app, get agent info from auth
       const agentId = 'agent_001';
       const agentName = 'এজেন্ট';
 
-      await ref.read(firebaseServiceProvider).addSavings(
-        memberId: member.id!,
-        amount: savingsState.amount,
-        agentId: agentId,
-        agentName: agentName,
-        notes: savingsState.notes,
-      );
+      if (_selectedTransactionType == 'savings') {
+        await ref.read(firebaseServiceProvider).addSavings(
+          memberId: widget.memberId,
+          amount: amount,
+          agentId: agentId,
+          agentName: agentName,
+          notes: _notesController.text,
+        );
+      } else {
+        await ref.read(firebaseServiceProvider).addWithdrawal(
+          memberId: widget.memberId,
+          amount: amount,
+          agentId: agentId,
+          agentName: agentName,
+          notes: _notesController.text,
+        );
+      }
 
-      // Reset form
-      ref.read(savingsFormProvider.notifier).resetForm();
       _amountController.clear();
       _notesController.clear();
-      _searchController.clear();
-      ref.read(memberSearchQueryProvider.notifier).state = '';
-
-      _showSuccess('সঞ্চয় সফলভাবে যোগ করা হয়েছে!');
+      _showSuccess('লেনদেন সফলভাবে সম্পন্ন হয়েছে!');
     } catch (e) {
       _showError('ত্রুটি: $e');
     } finally {
@@ -79,7 +88,6 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -89,237 +97,248 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-
+  double _calculateTotalBalance(List<Transaction> transactions) {
+    double balance = 0;
+    for (final transaction in transactions) {
+      if (transaction.transactionType == 'savings') {
+        balance += transaction.amount;
+      } else if (transaction.transactionType == 'withdrawal') {
+        balance -= transaction.amount;
+      }
+    }
+    return balance;
+  }
 
   @override
   Widget build(BuildContext context) {
     final savingsState = ref.watch(savingsFormProvider);
-    final selectedMember = savingsState.selectedMember;
+    final transactionsStream = ref.watch(firebaseServiceProvider).getAllTransactionsById(widget.memberId);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'সঞ্চয় সংগ্রহ',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
+        title: const Text('সঞ্চয় সংগ্রহ'),
         backgroundColor: Colors.green[700],
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Selected Member Card
-            if (selectedMember != null) _buildMemberCard(selectedMember),
+      body: Column(
+        children: [
+          // Total Balance Card
+          StreamBuilder<List<Transaction>>(
+            stream: transactionsStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(); // Hide while loading
+              }
 
-            // Member Selection Card
-            _buildSectionCard(
-              title: 'সদস্য নির্বাচন',
-              icon: Icons.search,
-              children: [
-                GestureDetector(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberSearchDialog(
-                      onMemberSelected: (member) {
-                        ref.read(savingsFormProvider.notifier).selectMember(member);
-                        Navigator.pop(context);
-                      },
-                    )));
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
+              final transactions = snapshot.data ?? [];
+              final totalBalance = _calculateTotalBalance(transactions);
+
+              return Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'মোট ব্যালেন্স',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '৳${totalBalance.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          // Transactions List
+          Expanded(
+            child: StreamBuilder<List<Transaction>>(
+              stream: transactionsStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                final transactions = snapshot.data ?? [];
+
+                if (transactions.isEmpty) {
+                  return const Center(child: Text('কোন লেনদেন নেই'));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: transactions.length,
+                  itemBuilder: (context, index) {
+                    final transaction = transactions[index];
+                    return Card(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search, color: Colors.green[700]),
-                        const SizedBox(width: 12),
-                        Text(
-                          selectedMember != null
-                              ? '${selectedMember.memberName} - ${selectedMember.memberNumber}'
-                              : 'সদস্য খুঁজুন (নাম, নং বা মোবাইল দ্বারা)',
-                          style: TextStyle(
-                            color: selectedMember != null
-                                ? Colors.black
-                                : Colors.grey[600],
-                            fontSize: 16,
-                          ),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: Icon(
+                          transaction.transactionType == 'savings'
+                              ? Icons.arrow_downward
+                              : Icons.arrow_upward,
+                          color: transaction.transactionType == 'savings'
+                              ? Colors.green
+                              : Colors.red,
                         ),
-                      ],
-                    ),
+                        title: Text(
+                          '${_getTransactionTypeText(transaction.transactionType)} - ৳${transaction.amount.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (transaction.notes != null && transaction.notes!.isNotEmpty)
+                              Text('মন্তব্য: ${transaction.notes}'),
+                            Text('এজেন্ট: ${transaction.agentName}'),
+                            Text('ব্যালেন্স: ৳${transaction.balanceAfter.toStringAsFixed(2)}'),
+                          ],
+                        ),
+                        trailing: Text(DateFormat('dd/MM/yy').format(transaction.transactionDate)),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          // New Transaction Form
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Colors.grey[300]!)),
+            ),
+            child: Column(
+              children: [
+                // Transaction Type Selection
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildTransactionTypeOption('savings', 'জমা', Colors.green),
+                      _buildTransactionTypeOption('withdrawal', 'উত্তোলন', Colors.red),
+                    ],
                   ),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Savings Amount Card
-            _buildSectionCard(
-              title: 'সঞ্চয়ের তথ্য',
-              icon: Icons.attach_money,
-              children: [
-                CustomTextField(
-                  label: 'সঞ্চয়ের পরিমাণ',
-                  hintText: 'টাকার পরিমাণ লিখুন',
+                const SizedBox(height: 16),
+                TextField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final amount = double.tryParse(value) ?? 0.0;
-                    ref.read(savingsFormProvider.notifier).updateAmount(amount);
-                  },
-                  isRequired: true,
+                  decoration: const InputDecoration(
+                    labelText: 'পরিমাণ',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                CustomTextField(
-                  label: 'মন্তব্য (ঐচ্ছিক)',
-                  hintText: 'কোন মন্তব্য থাকলে লিখুন',
+                const SizedBox(height: 12),
+                TextField(
                   controller: _notesController,
-                  onChanged: (value) {
-                    ref.read(savingsFormProvider.notifier).updateNotes(value);
-                  },
+                  decoration: const InputDecoration(
+                    labelText: 'মন্তব্য (ঐচ্ছিক)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: savingsState.isLoading ? null : _submitTransaction,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedTransactionType == 'savings'
+                          ? Colors.green[700]
+                          : Colors.red[700],
+                    ),
+                    child: savingsState.isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                      _selectedTransactionType == 'savings'
+                          ? 'জমা করুন'
+                          : 'উত্তোলন করুন',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
                 ),
               ],
             ),
-
-            const SizedBox(height: 30),
-
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: savingsState.isLoading ? null : _submitSavings,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: savingsState.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                  'সঞ্চয় সংরক্ষণ করুন',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMemberCard(Member member) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.person, color: Colors.green[700]),
-              const SizedBox(width: 8),
-              Text(
-                'নির্বাচিত সদস্য',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
-                ),
-              ),
-              Spacer(),
-              IconButton(onPressed: () async {
-                FirebaseService service=FirebaseService();
-               Navigator.push(context, CupertinoPageRoute(builder: (context)=>CombinedHistoryScreen(
-                 memberId: member.id??'',
-                 transactionStream: service.getAllTransactionsById(member.id??''),
-                 loanStream: service.getLoansById(member.id??''),
-               )));
-
-              }, icon: Icon(Icons.info,color: Colors.green,))
-            ],
           ),
-          const SizedBox(height: 12),
-          Text('নাম: ${member.memberName}'),
-          Text('সদস্য নং: ${member.memberNumber}'),
-          Text('মোবাইল: ${member.memberMobile}'),
-          Text('মোট সঞ্চয়: ৳${member.totalSavings.toStringAsFixed(2)}'),
         ],
       ),
     );
   }
 
-  Widget _buildSectionCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            Row(
-              children: [
-                Icon(icon, color: Colors.green[700], size: 24),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
-                  ),
-                ),
-              ],
+  Widget _buildTransactionTypeOption(String type, String label, Color color) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTransactionType = type;
+          });
+        },
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: _selectedTransactionType == type ? color : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: _selectedTransactionType == type ? color : Colors.grey[300]!,
             ),
-            const SizedBox(height: 20),
-            ...children,
-          ],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _selectedTransactionType == type ? Colors.white : color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  String _getTransactionTypeText(String type) {
+    switch (type) {
+      case 'savings':
+        return 'জমা';
+      case 'withdrawal':
+        return 'উত্তোলন';
+      default:
+        return type;
+    }
   }
 }
 
