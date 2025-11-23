@@ -360,13 +360,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     hintText: 'জামিনদারের পুরো নাম লিখুন',
                     controller: _controllers[9],
                     onChanged: memberNotifier.updateGuarantorName,
-                    isRequired: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'জামিনদারের নাম প্রয়োজন';
-                      }
-                      return null;
-                    },
+
                   ),
                   CustomTextField(
                     label: 'জামিনদারের জাতীয় পরিচয় পত্র',
@@ -374,13 +368,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     keyboardType: TextInputType.number,
                     controller: _controllers[10],
                     onChanged: memberNotifier.updateGuarantorNationalId,
-                    isRequired: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'জামিনদারের জাতীয় পরিচয় পত্র প্রয়োজন';
-                      }
-                      return null;
-                    },
+
                   ),
                   CustomTextField(
                     label: 'জামিনদারের মোবাইল নং',
@@ -388,16 +376,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     keyboardType: TextInputType.phone,
                     controller: _controllers[11],
                     onChanged: memberNotifier.updateGuarantorMobile,
-                    isRequired: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'জামিনদারের মোবাইল নম্বর প্রয়োজন';
-                      }
-                      if (value.length != 11 || !value.startsWith('01')) {
-                        return 'সঠিক মোবাইল নম্বর লিখুন';
-                      }
-                      return null;
-                    },
+
                   ),
                 ],
               ),
