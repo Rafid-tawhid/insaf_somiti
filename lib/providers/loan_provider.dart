@@ -9,7 +9,7 @@ import 'member_providers.dart';
 final loanFormProvider = StateNotifierProvider<LoanFormNotifier, LoanFormState>((ref) {
   return LoanFormNotifier();
 });
-
+//
 class LoanFormState {
   final Member? selectedMember;
   final double loanAmount;
