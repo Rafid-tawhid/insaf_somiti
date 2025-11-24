@@ -494,7 +494,10 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
           _buildCalculationRow('কিস্তির সংখ্যা', '$installmentCount টি'),
           _buildCalculationRow('সুদ হার', '${_interestController.text}%'),
           _buildCalculationRow('মোট সুদ', _currencyFormat.format(_totalInterest)),
+          _buildCalculationRow('মোট পরিমাণ', _currencyFormat.format(installmentCount*installmentAmount)),
+          SizedBox(height: 4,),
           _buildCalculationRow('মোট প্রদেয়', _currencyFormat.format(_totalPayable)),
+
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(8),
