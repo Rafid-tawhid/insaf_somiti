@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:insaf_somiti/screens/savings_screen.dart';
 import '../models/members.dart';
+import 'loan_application_screen.dart';
 
 class MemberDetailsScreen extends StatelessWidget {
   final Member member;
@@ -455,7 +456,14 @@ class MemberDetailsScreen extends StatelessWidget {
   }
 
   void _navigateToLoan(BuildContext context, Member member) {
-
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoanApplicationScreen(
+          memberId: member.id.toString(),
+        ),
+      ),
+    );
   }
 
   void _navigateToHistory(BuildContext context, Member member) {

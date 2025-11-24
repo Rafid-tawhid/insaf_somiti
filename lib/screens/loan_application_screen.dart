@@ -12,8 +12,28 @@ import '../service/service_class.dart';
 import '../widgets/search_screen.dart';
 import 'member_transaction_info_list.dart';
 
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:insaf_somiti/screens/profile_entry_screen.dart';
+import 'package:insaf_somiti/screens/savings_screen.dart';
+import 'package:intl/intl.dart';
+import '../models/loan_model.dart';
+import '../models/members.dart';
+import '../providers/loan_provider.dart';
+import '../providers/member_providers.dart';
+import '../service/service_class.dart';
+import '../widgets/search_screen.dart';
+import 'member_transaction_info_list.dart';
+
 class LoanApplicationScreen extends ConsumerStatefulWidget {
-  const LoanApplicationScreen({Key? key}) : super(key: key);
+  final String memberId;
+
+  const LoanApplicationScreen({
+    Key? key,
+    required this.memberId,
+  }) : super(key: key);
 
   @override
   ConsumerState<LoanApplicationScreen> createState() => _LoanApplicationScreenState();
@@ -22,53 +42,126 @@ class LoanApplicationScreen extends ConsumerStatefulWidget {
 class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
   final _amountController = TextEditingController();
   final _purposeController = TextEditingController();
+  final _installmentController = TextEditingController();
   final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'bn_BD', symbol: '৳');
+  Member? _member;
+  String _selectedLoanType = 'মাসিক'; // দৈনিক, সাপ্তাহিক, মাসিক
+  int _installmentAmount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMemberData();
+  }
 
   @override
   void dispose() {
     _amountController.dispose();
     _purposeController.dispose();
+    _installmentController.dispose();
     super.dispose();
   }
 
+  Future<void> _loadMemberData() async {
+    try {
+      final member = await ref.read(firebaseServiceProvider).getMemberById(widget.memberId);
+      setState(() {
+        _member = member;
+      });
+    } catch (e) {
+      _showError('সদস্য তথ্য লোড করতে সমস্যা: $e');
+    }
+  }
 
+  void _calculateLoan() {
+    final loanAmount = double.tryParse(_amountController.text) ?? 0.0;
+    if (loanAmount <= 0) return;
+
+    final installmentAmount = double.tryParse(_installmentController.text) ?? 0.0;
+    if (installmentAmount <= 0) return;
+
+    double totalInstallments = 0;
+
+    switch (_selectedLoanType) {
+      case 'দৈনিক':
+        totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+        break;
+      case 'সাপ্তাহিক':
+        totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+        break;
+      case 'মাসিক':
+        totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+        break;
+    }
+
+    setState(() {
+      _installmentAmount = installmentAmount.toInt();
+    });
+  }
 
   Future<void> _submitLoan() async {
-    final loanState = ref.read(loanFormProvider);
-    final member = loanState.selectedMember;
-
-    if (member == null) {
-      _showError('দয়া করে একজন সদস্য নির্বাচন করুন');
+    if (_member == null) {
+      _showError('সদস্য তথ্য পাওয়া যায়নি');
       return;
     }
 
-    if (loanState.loanAmount <= 0) {
+    final loanAmount = double.tryParse(_amountController.text) ?? 0.0;
+    final installmentAmount = double.tryParse(_installmentController.text) ?? 0.0;
+
+    if (loanAmount <= 0) {
       _showError('দয়া করে সঠিক ঋণের পরিমাণ লিখুন');
+      return;
+    }
+
+    if (installmentAmount <= 0) {
+      _showError('দয়া করে সঠিক কিস্তির পরিমাণ লিখুন');
       return;
     }
 
     try {
       ref.read(loanFormProvider.notifier).setLoading(true);
 
+      // Calculate loan details based on type
+      double totalInstallments = 0;
+      int tenureMonths = 0;
+
+      switch (_selectedLoanType) {
+        case 'দৈনিক':
+          totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+          tenureMonths = (totalInstallments / 30).ceil(); // Approximate months
+          break;
+        case 'সাপ্তাহিক':
+          totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+          tenureMonths = (totalInstallments / 4).ceil(); // Approximate months
+          break;
+        case 'মাসিক':
+          totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+          tenureMonths = totalInstallments.toInt();
+          break;
+      }
+
       final calculation = ref.read(firebaseServiceProvider).calculateLoan(
-        loanState.loanAmount,
-        loanState.interestRate,
-        loanState.tenureMonths,
+        loanAmount,
+        ref.read(loanFormProvider).interestRate,
+        tenureMonths,
       );
 
       final loan = Loan(
-        memberId: member.id!,
-        memberName: member.memberName,
-        memberNumber: member.memberNumber,
-        memberMobile: member.memberMobile,
-        loanAmount: loanState.loanAmount,
-        interestRate: loanState.interestRate,
-        tenureMonths: loanState.tenureMonths,
-        loanPurpose: loanState.loanPurpose,
+        memberId: widget.memberId,
+        memberName: _member!.memberName,
+        memberNumber: _member!.memberNumber,
+        memberMobile: _member!.memberMobile,
+        loanAmount: loanAmount,
+        interestRate: ref.read(loanFormProvider).interestRate,
+        tenureMonths: tenureMonths,
+        loanPurpose: _purposeController.text,
         loanDate: DateTime.now(),
         totalPayable: calculation['totalPayable']!,
         monthlyInstallment: calculation['monthlyInstallment']!,
         remainingBalance: calculation['totalPayable']!,
+        // loanType: _selectedLoanType,
+        // installmentAmount: installmentAmount,
+        // totalInstallments: totalInstallments.toInt(),
         createdAt: DateTime.now(),
       );
 
@@ -78,6 +171,7 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
       ref.read(loanFormProvider.notifier).resetForm();
       _amountController.clear();
       _purposeController.clear();
+      _installmentController.clear();
 
       _showSuccess('ঋণ সফলভাবে যোগ করা হয়েছে!');
     } catch (e) {
@@ -110,12 +204,13 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
   @override
   Widget build(BuildContext context) {
     final loanState = ref.watch(loanFormProvider);
-    final selectedMember = loanState.selectedMember;
-    final calculation = ref.read(firebaseServiceProvider).calculateLoan(
-      loanState.loanAmount,
-      loanState.interestRate,
-      loanState.tenureMonths,
-    );
+    final loanAmount = double.tryParse(_amountController.text) ?? 0.0;
+    final installmentAmount = double.tryParse(_installmentController.text) ?? 0.0;
+
+    double totalInstallments = 0;
+    if (installmentAmount > 0) {
+      totalInstallments = (loanAmount / installmentAmount).ceilToDouble();
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -132,56 +227,14 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
+      body: _member == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Selected Member Card
-            if (selectedMember != null) _buildMemberCard(selectedMember),
-
-            // Member Selection
-            _buildSectionCard(
-              title: 'সদস্য নির্বাচন',
-              icon: Icons.person_search,
-              children: [
-                GestureDetector(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberSearchDialog(
-                      onMemberSelected: (member) {
-                        ref.read(loanFormProvider.notifier).selectMember(member);
-                        Navigator.pop(context);
-                      },
-                    )));
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search, color: Colors.orange[700]),
-                        const SizedBox(width: 12),
-                        Text(
-                          selectedMember != null
-                              ? '${selectedMember.memberName} - ${selectedMember.memberNumber}'
-                              : 'সদস্য খুঁজুন (নাম, নং বা মোবাইল দ্বারা)',
-                          style: TextStyle(
-                            color: selectedMember != null
-                                ? Colors.black
-                                : Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Member Card
+            _buildMemberCard(_member!),
 
             const SizedBox(height: 20),
 
@@ -195,11 +248,58 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
                   hintText: 'ঋণের পরিমাণ লিখুন',
                   controller: _amountController,
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final amount = double.tryParse(value) ?? 0.0;
-                    ref.read(loanFormProvider.notifier).updateLoanAmount(amount);
-                  },
+                  onChanged: (value) => _calculateLoan(),
                   isRequired: true,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Loan Type Dropdown
+                const Text(
+                  'ঋণের ধরন',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButton<String>(
+                    value: _selectedLoanType,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: ['দৈনিক', 'সাপ্তাহিক', 'মাসিক']
+                        .map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedLoanType = newValue!;
+                        _calculateLoan();
+                      });
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Installment Amount
+                TextField(
+                  controller: _installmentController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) => _calculateLoan(),
+                  decoration: InputDecoration(
+                    labelText: _getInstallmentLabel(),
+                    hintText: 'কিস্তির পরিমাণ লিখুন',
+                    border: const OutlineInputBorder(),
+                    suffixText: 'টাকা',
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -224,33 +324,10 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
                 ),
 
                 const SizedBox(height: 16),
-                const Text(
-                  'ঋণের মেয়াদ (মাস)',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Slider(
-                  value: loanState.tenureMonths.toDouble(),
-                  min: 1,
-                  max: 36,
-                  divisions: 35,
-                  label: '${loanState.tenureMonths} মাস',
-                  onChanged: (value) {
-                    ref.read(loanFormProvider.notifier).updateTenure(value.toInt());
-                  },
-                ),
-                Text(
-                  '${loanState.tenureMonths} মাস',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-
                 CustomTextField(
                   label: 'ঋণের উদ্দেশ্য',
                   hintText: 'ঋণ কী কাজে ব্যবহার হবে',
                   controller: _purposeController,
-                  onChanged: (value) {
-                    ref.read(loanFormProvider.notifier).updateLoanPurpose(value);
-                  },
                 ),
               ],
             ),
@@ -258,7 +335,8 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
             const SizedBox(height: 20),
 
             // Loan Calculation Card
-            _buildCalculationCard(calculation),
+            if (loanAmount > 0 && installmentAmount > 0)
+              _buildCalculationCard(loanAmount, installmentAmount, totalInstallments),
 
             const SizedBox(height: 30),
 
@@ -293,6 +371,19 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
     );
   }
 
+  String _getInstallmentLabel() {
+    switch (_selectedLoanType) {
+      case 'দৈনিক':
+        return 'দৈনিক কিস্তি';
+      case 'সাপ্তাহিক':
+        return 'সাপ্তাহিক কিস্তি';
+      case 'মাসিক':
+        return 'মাসিক কিস্তি';
+      default:
+        return 'কিস্তি';
+    }
+  }
+
   Widget _buildMemberCard(Member member) {
     return Container(
       width: double.infinity,
@@ -311,23 +402,30 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
               Icon(Icons.person, color: Colors.orange[700]),
               const SizedBox(width: 8),
               Text(
-                'নির্বাচিত সদস্য',
+                'সদস্য তথ্য',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.orange[700],
                 ),
               ),
-              Spacer(),
-              IconButton(onPressed: () async {
-                FirebaseService service=FirebaseService();
-                Navigator.push(context, CupertinoPageRoute(builder: (context)=>CombinedHistoryScreen(
-                  memberId: member.id??'',
-                  transactionStream: service.getAllTransactionsById(member.id??''),
-                  loanStream: service.getLoansById(member.id??''),
-                )));
-
-              }, icon: Icon(Icons.info,color: Colors.green,))
+              const Spacer(),
+              IconButton(
+                onPressed: () {
+                  final service = FirebaseService();
+                  Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (context) => CombinedHistoryScreen(
+                        memberId: member.id ?? '',
+                        transactionStream: service.getAllTransactionsById(member.id ?? ''),
+                        loanStream: service.getLoansById(member.id ?? ''),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.info, color: Colors.green),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -339,7 +437,9 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
     );
   }
 
-  Widget _buildCalculationCard(Map<String, double> calculation) {
+  Widget _buildCalculationCard(double loanAmount, double installmentAmount, double totalInstallments) {
+    final totalPayable = loanAmount + (loanAmount * ref.read(loanFormProvider).interestRate / 100);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -366,9 +466,12 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildCalculationRow('মোট প্রদেয়', _currencyFormat.format(calculation['totalPayable']!)),
-          _buildCalculationRow('মাসিক কিস্তি', _currencyFormat.format(calculation['monthlyInstallment']!)),
-          _buildCalculationRow('মোট সুদ', _currencyFormat.format(calculation['totalInterest']!)),
+          _buildCalculationRow('ঋণের পরিমাণ', _currencyFormat.format(loanAmount)),
+          _buildCalculationRow('${_getInstallmentLabel()} পরিমাণ', _currencyFormat.format(installmentAmount)),
+          _buildCalculationRow('মোট কিস্তি', '${totalInstallments.toInt()} টি'),
+          _buildCalculationRow('সুদ হার', '${ref.read(loanFormProvider).interestRate}%'),
+          _buildCalculationRow('মোট প্রদেয়', _currencyFormat.format(totalPayable)),
+          _buildCalculationRow('মোট সুদ', _currencyFormat.format(totalPayable - loanAmount)),
         ],
       ),
     );
