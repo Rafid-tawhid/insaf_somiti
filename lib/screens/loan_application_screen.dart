@@ -13,22 +13,6 @@ import '../widgets/search_screen.dart';
 import 'member_transaction_info_list.dart';
 
 
-
-
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:insaf_somiti/screens/profile_entry_screen.dart';
-import 'package:insaf_somiti/screens/savings_screen.dart';
-import 'package:intl/intl.dart';
-import '../models/loan_model.dart';
-import '../models/members.dart';
-import '../providers/loan_provider.dart';
-import '../providers/member_providers.dart';
-import '../service/service_class.dart';
-import '../widgets/search_screen.dart';
-import 'member_transaction_info_list.dart';
-
 class LoanApplicationScreen extends ConsumerStatefulWidget {
   final String memberId;
 

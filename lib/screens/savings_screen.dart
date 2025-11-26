@@ -13,10 +13,12 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 
 class SavingsEntryScreen extends ConsumerStatefulWidget {
   final String memberId;
+  final String transactionType; // 'savings' or 'withdraw'
 
   const SavingsEntryScreen({
     Key? key,
     required this.memberId,
+    required this.transactionType,
   }) : super(key: key);
 
   @override
@@ -26,7 +28,6 @@ class SavingsEntryScreen extends ConsumerStatefulWidget {
 class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
-  String _selectedTransactionType = 'savings'; // 'savings' or 'withdrawal'
 
   @override
   void dispose() {
@@ -49,7 +50,7 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
       const agentId = 'agent_001';
       const agentName = 'এজেন্ট';
 
-      if (_selectedTransactionType == 'savings') {
+      if (widget.transactionType == 'savings') {
         await ref.read(firebaseServiceProvider).addSavings(
           memberId: widget.memberId,
           amount: amount,
@@ -107,6 +108,61 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
     return balance;
   }
 
+  String _getScreenTitle() {
+    switch (widget.transactionType) {
+      case 'savings':
+        return 'সঞ্চয় সংগ্রহ';
+      case 'withdraw':
+        return 'সঞ্চয় উত্তোলন';
+      default:
+        return 'লেনদেন';
+    }
+  }
+
+  String _getButtonText() {
+    switch (widget.transactionType) {
+      case 'savings':
+        return 'জমা করুন';
+      case 'withdraw':
+        return 'লোন দিন';
+      default:
+        return 'সাবমিট করুন';
+    }
+  }
+
+  Color _getPrimaryColor() {
+    switch (widget.transactionType) {
+      case 'savings':
+        return Colors.green[700]!;
+      case 'withdraw':
+        return Colors.orange[700]!;
+      default:
+        return Colors.blue[700]!;
+    }
+  }
+
+  Color _getLightColor() {
+    switch (widget.transactionType) {
+      case 'savings':
+        return Colors.green[50]!;
+      case 'withdraw':
+        return Colors.orange[50]!;
+      default:
+        return Colors.blue[50]!;
+    }
+  }
+
+  Color _getBorderColor() {
+    switch (widget.transactionType) {
+      case 'savings':
+        return Colors.green[200]!;
+      case 'withdraw':
+        return Colors.orange[200]!;
+      default:
+        return Colors.blue[200]!;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final savingsState = ref.watch(savingsFormProvider);
@@ -115,8 +171,8 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('সঞ্চয় সংগ্রহ'),
-        backgroundColor: Colors.green[700],
+        title: Text(_getScreenTitle()),
+        backgroundColor: _getPrimaryColor(),
       ),
       body: Column(
         children: [
@@ -136,9 +192,9 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: _getLightColor(),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green[200]!),
+                  border: Border.all(color: _getBorderColor()),
                 ),
                 child: Column(
                   children: [
@@ -146,17 +202,17 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                       'মোট ব্যালেন্স',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.green[700],
+                        color: _getPrimaryColor(),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '৳${totalBalance.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: _getPrimaryColor(),
                       ),
                     ),
                   ],
@@ -199,7 +255,7 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                               : Icons.arrow_upward,
                           color: transaction.transactionType == 'savings'
                               ? Colors.green
-                              : Colors.red,
+                              : Colors.orange,
                         ),
                         title: Text(
                           '${_getTransactionTypeText(transaction.transactionType)} - ৳${transaction.amount.toStringAsFixed(2)}',
@@ -232,19 +288,23 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
             ),
             child: Column(
               children: [
-                // Transaction Type Selection
+                // Transaction Type Display (Read-only)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
+                    color: _getLightColor(),
+                    border: Border.all(color: _getBorderColor()),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildTransactionTypeOption('savings', 'জমা', Colors.green),
-                      _buildTransactionTypeOption('withdrawal', 'উত্তোলন', Colors.red),
-                    ],
+                  child: Text(
+                    _getTransactionTypeText(widget.transactionType),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _getPrimaryColor(),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -271,16 +331,12 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                   child: ElevatedButton(
                     onPressed: savingsState.isLoading ? null : _submitTransaction,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _selectedTransactionType == 'savings'
-                          ? Colors.green[700]
-                          : Colors.red[700],
+                      backgroundColor: _getPrimaryColor(),
                     ),
                     child: savingsState.isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                      _selectedTransactionType == 'savings'
-                          ? 'জমা করুন'
-                          : 'উত্তোলন করুন',
+                      _getButtonText(),
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
@@ -293,43 +349,12 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
     );
   }
 
-  Widget _buildTransactionTypeOption(String type, String label, Color color) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedTransactionType = type;
-          });
-        },
-        child: Container(
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          decoration: BoxDecoration(
-            color: _selectedTransactionType == type ? color : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: _selectedTransactionType == type ? color : Colors.grey[300]!,
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _selectedTransactionType == type ? Colors.white : color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   String _getTransactionTypeText(String type) {
     switch (type) {
       case 'savings':
-        return 'জমা';
-      case 'withdrawal':
-        return 'উত্তোলন';
+        return 'সঞ্চয়';
+      case 'withdraw':
+        return 'লোন';
       default:
         return type;
     }

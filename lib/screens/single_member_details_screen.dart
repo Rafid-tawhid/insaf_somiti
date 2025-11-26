@@ -160,39 +160,58 @@ class MemberDetailsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.account_balance_wallet,
-                    iconColor: Colors.blue,
-                    backgroundColor: Colors.blue[50]!,
-                    label: 'হিসাব',
-                    onTap: () => _navigateToHisab(context, member),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionButton(
+                        icon: Icons.add_card,
+                        iconColor: Colors.green,
+                        backgroundColor: Colors.green[50]!,
+                        label: 'সঞ্চয় আদায়',
+                        onTap: () => _navigateToHisab(context, member,'savings')
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildActionButton(
+                        icon: Icons.remove_circle,
+                        iconColor: Colors.red,
+                        backgroundColor: Colors.red[50]!,
+                        label: 'সঞ্চয় উত্তোলন',
+                        onTap: () => _navigateToHisab(context, member,'withdraw'),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.money,
-                    iconColor: Colors.orange,
-                    backgroundColor: Colors.orange[50]!,
-                    label: 'লোন',
-                    onTap: () => _navigateToLoan(context, member),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.history,
-                    iconColor: Colors.purple,
-                    backgroundColor: Colors.purple[50]!,
-                    label: 'ইতিহাস',
-                    onTap: () => _navigateToHistory(context, member),
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionButton(
+                        icon: Icons.attach_money,
+                        iconColor: Colors.blue,
+                        backgroundColor: Colors.blue[50]!,
+                        label: 'ঋণ আদায়',
+                        onTap: () => _navigateToLoanCollect(context, member),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildActionButton(
+                        icon: Icons.money_outlined,
+                        iconColor: Colors.orange,
+                        backgroundColor: Colors.orange[50]!,
+                        label: 'ঋণ প্রদান',
+                        onTap: () => _navigateToLoan(context, member),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
+            )
+            ,
           ),
 
           // Details Section
@@ -449,10 +468,33 @@ class MemberDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToHisab(BuildContext context, Member member) {
-    Navigator.push(context, MaterialPageRoute(builder: (context)=>SavingsEntryScreen(
-      memberId: member.id.toString(),
-    )));
+  void _navigateToHisab(BuildContext context, Member member,String type) {
+
+    if(type=='savings'){
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SavingsEntryScreen(
+            memberId: member.id.toString(),
+            transactionType: 'savings',
+          ),
+        ),
+      );
+      return;
+    }
+    else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SavingsEntryScreen(
+            memberId: member.id.toString(),
+            transactionType: 'withdraw',
+          ),
+        ),
+      );
+    }
+
+
   }
 
   void _navigateToLoan(BuildContext context, Member member) {
@@ -494,4 +536,8 @@ class MemberDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _navigateToLoanCollect(BuildContext context, Member member) {}
+
+  void _navigateToLoanProvide(BuildContext context, Member member) {}
 }
