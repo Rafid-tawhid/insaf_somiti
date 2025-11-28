@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:insaf_somiti/screens/savings_screen.dart';
 import '../models/members.dart';
 import 'loan_application_screen.dart';
+import 'loan_installment_given_screen.dart';
 
 class MemberDetailsScreen extends StatelessWidget {
   final Member member;
@@ -508,10 +509,6 @@ class MemberDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToHistory(BuildContext context, Member member) {
-    // Navigate to transaction history screen
-    // Navigator.push(...);
-  }
 
   void _shareMemberDetails(BuildContext context) {
     // Share functionality
@@ -537,7 +534,15 @@ class MemberDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToLoanCollect(BuildContext context, Member member) {}
+  void _navigateToLoanCollect(BuildContext context, Member member) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoanInstallmentScreen(
+          memberId: member.id??'',
+        ),
+      ),
+    );
+  }
 
-  void _navigateToLoanProvide(BuildContext context, Member member) {}
 }

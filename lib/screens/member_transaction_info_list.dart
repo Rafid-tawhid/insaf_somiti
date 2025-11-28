@@ -360,7 +360,7 @@ class _CombinedHistoryScreenState extends State<CombinedHistoryScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${loan.status.toUpperCase()} • ${loan.tenureMonths} Months',
+                '${loan.status.toUpperCase()} • ${loan.tenureNumber} Number',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],

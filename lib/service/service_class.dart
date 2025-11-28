@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
+import '../models/loan_installment.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
 import '../models/transaction_filter.dart';
@@ -352,6 +353,57 @@ class FirebaseService {
       });
     } catch (e) {
       throw Exception('সদস্যের ব্যালেন্স আপডেট করতে সমস্যা: $e');
+    }
+  }
+
+
+  ///nov 27
+  Future<void> addLoanInstallment(LoanInstallment installment) async {
+    FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    try {
+      await _firestore.collection('loanInstallments').add(installment.toMap());
+    } catch (e) {
+      throw Exception('কিস্তি সংরক্ষণ করতে সমস্যা: $e');
+    }
+  }
+
+  Future<List<LoanInstallment>> getLoanInstallments(String loanId) async {
+    try {
+      FirebaseFirestore _firestore = FirebaseFirestore.instance;
+      final querySnapshot = await _firestore
+          .collection('loanInstallments')
+          .where('loanId', isEqualTo: loanId)
+          .orderBy('paymentDate', descending: true)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        return LoanInstallment.fromMap(doc.id, doc.data());
+      }).toList();
+    } catch (e) {
+      throw Exception('কিস্তি লোড করতে সমস্যা: $e');
+    }
+  }
+
+  Future<void> updateLoan(Loan loan) async {
+    try {
+      FirebaseFirestore _firestore = FirebaseFirestore.instance;
+      await _firestore.collection('loans').doc(loan.id).update(loan.toMap());
+    } catch (e) {
+      throw Exception('ঋণ আপডেট করতে সমস্যা: $e');
+    }
+  }
+
+  Future<Loan> getLoanById(String loanId) async {
+    try {
+      FirebaseFirestore _firestore = FirebaseFirestore.instance;
+      final doc = await _firestore.collection('loans').doc(loanId).get();
+      if (doc.exists) {
+        return Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      } else {
+        throw Exception('ঋণ পাওয়া যায়নি');
+      }
+    } catch (e) {
+      throw Exception('ঋণ লোড করতে সমস্যা: $e');
     }
   }
 }

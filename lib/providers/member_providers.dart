@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/loan_installment.dart';
+import '../models/loan_model.dart';
 import '../models/members.dart';
 import '../service/service_class.dart';
 
@@ -103,3 +106,5 @@ class MemberFormNotifier extends Notifier<Member> {
     );
   }
 }
+
+

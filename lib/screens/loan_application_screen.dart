@@ -128,16 +128,17 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
         memberMobile: _member!.memberMobile,
         loanAmount: loanAmount,
         interestRate: interestRate,
-        tenureMonths: installmentCount,
+        tenureNumber: installmentCount,
         loanPurpose: _purposeController.text,
         loanDate: DateTime.now(),
         totalPayable: _totalPayable,
-        monthlyInstallment: installmentAmount,
+        installmentAmount: installmentAmount,
         remainingBalance: _totalPayable,
         // loanType: _selectedLoanType,
         // installmentAmount: installmentAmount,
         // totalInstallments: installmentCount,
         createdAt: DateTime.now(),
+        currentTenureNumber: 0,
       );
 
       await ref.read(firebaseServiceProvider).addLoan(loan);

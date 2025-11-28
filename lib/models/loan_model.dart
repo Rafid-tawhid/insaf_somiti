@@ -6,12 +6,13 @@ class Loan {
   final String memberMobile;
   final double loanAmount;
   final double interestRate;
-  final int tenureMonths;
+  final int tenureNumber;
+  final int currentTenureNumber;
   final String loanPurpose;
   final DateTime loanDate;
   final String status; // 'active', 'completed'
   final double totalPayable;
-  final double monthlyInstallment;
+  final double installmentAmount;
   final double remainingBalance;
   final double totalPaid;
   final DateTime createdAt;
@@ -24,12 +25,13 @@ class Loan {
     required this.memberMobile,
     required this.loanAmount,
     required this.interestRate,
-    required this.tenureMonths,
+    required this.tenureNumber,
     required this.loanPurpose,
+    required this.currentTenureNumber,
     required this.loanDate,
     this.status = 'active',
     required this.totalPayable,
-    required this.monthlyInstallment,
+    required this.installmentAmount,
     required this.remainingBalance,
     this.totalPaid = 0.0,
     required this.createdAt,
@@ -43,12 +45,13 @@ class Loan {
       'memberMobile': memberMobile,
       'loanAmount': loanAmount,
       'interestRate': interestRate,
-      'tenureMonths': tenureMonths,
+      'tenureNumber': tenureNumber,
+      'currentTenureNumber': currentTenureNumber,
       'loanPurpose': loanPurpose,
       'loanDate': loanDate.millisecondsSinceEpoch,
       'status': status,
       'totalPayable': totalPayable,
-      'monthlyInstallment': monthlyInstallment,
+      'installmentAmount': installmentAmount,
       'remainingBalance': remainingBalance,
       'totalPaid': totalPaid,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -62,14 +65,15 @@ class Loan {
       memberName: map['memberName'] ?? '',
       memberNumber: map['memberNumber'] ?? '',
       memberMobile: map['memberMobile'] ?? '',
+      currentTenureNumber: map['currentTenureNumber'] ?? '',
       loanAmount: (map['loanAmount'] ?? 0.0).toDouble(),
       interestRate: (map['interestRate'] ?? 0.0).toDouble(),
-      tenureMonths: map['tenureMonths'] ?? 0,
+      tenureNumber: map['tenureNumber'] ?? 0,
       loanPurpose: map['loanPurpose'] ?? '',
       loanDate: DateTime.fromMillisecondsSinceEpoch(map['loanDate']),
       status: map['status'] ?? 'active',
       totalPayable: (map['totalPayable'] ?? 0.0).toDouble(),
-      monthlyInstallment: (map['monthlyInstallment'] ?? 0.0).toDouble(),
+      installmentAmount: (map['installmentAmount'] ?? 0.0).toDouble(),
       remainingBalance: (map['remainingBalance'] ?? 0.0).toDouble(),
       totalPaid: (map['totalPaid'] ?? 0.0).toDouble(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
