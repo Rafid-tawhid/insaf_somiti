@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
+import '../models/cashbox_summery.dart';
 import '../models/loan_installment.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
@@ -200,7 +201,10 @@ class FirebaseService {
 // Simple loan methods
   Future<void> addLoan(Loan loan) async {
     try {
-      await _firestore.collection('loans').add(loan.toMap());
+      var id=_firestore.collection('loans').doc();
+      var loanWithId=loan.copyWith(id: id.id);
+
+      await _firestore.collection('loans').add(loanWithId.toMap());
     } catch (e) {
       throw Exception('Failed to add loan: $e');
     }
@@ -357,55 +361,144 @@ class FirebaseService {
   }
 
 
-  ///nov 27
-  Future<void> addLoanInstallment(LoanInstallment installment) async {
-    FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    try {
-      await _firestore.collection('loanInstallments').add(installment.toMap());
-    } catch (e) {
-      throw Exception('কিস্তি সংরক্ষণ করতে সমস্যা: $e');
-    }
-  }
+  ///nov 29
 
-  Future<List<LoanInstallment>> getLoanInstallments(String loanId) async {
-    try {
-      FirebaseFirestore _firestore = FirebaseFirestore.instance;
-      final querySnapshot = await _firestore
-          .collection('loanInstallments')
-          .where('loanId', isEqualTo: loanId)
-          .orderBy('paymentDate', descending: true)
-          .get();
-
-      return querySnapshot.docs.map((doc) {
-        return LoanInstallment.fromMap(doc.id, doc.data());
-      }).toList();
-    } catch (e) {
-      throw Exception('কিস্তি লোড করতে সমস্যা: $e');
-    }
+  // Add these to your FirebaseService
+  Future<List<Loan>> getLoansByMemberId(String memberId) async {
+    final query = _firestore.collection('loans').where('memberId', isEqualTo: memberId);
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => Loan.fromMap(doc.id, doc.data())).toList();
   }
 
   Future<void> updateLoan(Loan loan) async {
+    if (loan.id == null) throw Exception('Loan ID is required for update');
+    await _firestore.collection('loans').doc(loan.id).update(loan.toMap());
+  }
+
+
+  // Add to your FirebaseService class
+  final CollectionReference _installmentTransactionsCollection =
+  FirebaseFirestore.instance.collection('installment_transactions');
+
+  Future<void> addInstallmentTransaction(InstallmentTransaction transaction) async {
+    await _installmentTransactionsCollection.add(transaction.toMap());
+  }
+
+  Future<List<InstallmentTransaction>> getInstallmentTransactionsByLoanId(String loanId) async {
+    final query = _installmentTransactionsCollection.where('loanId', isEqualTo: loanId);
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => InstallmentTransaction.fromMap(doc.id, doc.data() as Map<String, dynamic>)).toList();
+  }
+
+
+
+
+
+
+  // Add these methods to your FirebaseService class
+
+  Future<CashboxSummary> getCashboxSummary() async {
     try {
-      FirebaseFirestore _firestore = FirebaseFirestore.instance;
-      await _firestore.collection('loans').doc(loan.id).update(loan.toMap());
+      // Get all transactions
+      final allTransactions = await _firestore
+          .collection('transactions')
+          .get()
+          .then((snapshot) => snapshot.docs
+          .map((doc) => Transaction.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .toList());
+
+      // Get all loans
+      final allLoans = await _firestore
+          .collection('loans')
+          .get()
+          .then((snapshot) => snapshot.docs
+          .map((doc) => Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .toList());
+
+      // Get all members
+      final allMembers = await _firestore
+          .collection('members')
+          .get()
+          .then((snapshot) => snapshot.docs.length);
+
+      // Calculate totals
+      double totalSavings = 0;
+      double totalWithdrawals = 0;
+      double totalLoanGiven = 0;
+      double totalLoanCollected = 0;
+      double totalLoanPending = 0;
+      int activeLoans = 0;
+      int completedLoans = 0;
+
+      // Calculate transaction totals
+      for (final transaction in allTransactions) {
+        if (transaction.transactionType == 'savings') {
+          totalSavings += transaction.amount;
+        } else if (transaction.transactionType == 'withdrawal') {
+          totalWithdrawals += transaction.amount;
+        }
+      }
+
+      // Calculate loan totals
+      for (final loan in allLoans) {
+        totalLoanGiven += loan.loanAmount;
+        totalLoanCollected += loan.totalPaid;
+        totalLoanPending += loan.remainingBalance;
+
+        if (loan.status == 'active') {
+          activeLoans++;
+        } else if (loan.status == 'completed') {
+          completedLoans++;
+        }
+      }
+
+      // Calculate current balance
+      final currentBalance = totalSavings - totalWithdrawals + totalLoanCollected;
+
+      return CashboxSummary(
+        totalSavings: totalSavings,
+        totalWithdrawals: totalWithdrawals,
+        totalLoanGiven: totalLoanGiven,
+        totalLoanCollected: totalLoanCollected,
+        totalLoanPending: totalLoanPending,
+        currentBalance: currentBalance,
+        totalMembers: allMembers,
+        activeLoans: activeLoans,
+        completedLoans: completedLoans,
+        lastUpdated: DateTime.now(),
+      );
     } catch (e) {
-      throw Exception('ঋণ আপডেট করতে সমস্যা: $e');
+      throw Exception('ক্যাশবক্স তথ্য লোড করতে সমস্যা: $e');
     }
   }
 
-  Future<Loan> getLoanById(String loanId) async {
-    try {
-      FirebaseFirestore _firestore = FirebaseFirestore.instance;
-      final doc = await _firestore.collection('loans').doc(loanId).get();
-      if (doc.exists) {
-        return Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-      } else {
-        throw Exception('ঋণ পাওয়া যায়নি');
-      }
-    } catch (e) {
-      throw Exception('ঋণ লোড করতে সমস্যা: $e');
-    }
+// Get recent transactions
+  Stream<List<Transaction>> getRecentTransactions({int limit = 10}) {
+    return _firestore
+        .collection('transactions')
+        .orderBy('transactionDate', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Transaction.fromMap(doc.id, doc.data());
+      }).toList();
+    });
   }
+
+// Get recent loan installments
+  Stream<List<InstallmentTransaction>> getRecentInstallments({int limit = 10}) {
+    return _installmentTransactionsCollection
+        .orderBy('paymentDate', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return InstallmentTransaction.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      }).toList();
+    });
+  }
+
 }
 
 

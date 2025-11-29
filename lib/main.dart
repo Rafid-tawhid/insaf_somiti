@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:insaf_somiti/screens/all_members_screen.dart';
+import 'package:insaf_somiti/screens/cashbox_screen.dart';
 import 'package:insaf_somiti/screens/loan_application_screen.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
 import 'package:insaf_somiti/screens/savings_screen.dart';
@@ -715,7 +716,7 @@ class HomePage extends StatelessWidget {
         onTap: () {
           if(index==2){
             //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberEntryScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>CashboxScreen()));
           }
 
           // if(index==2){

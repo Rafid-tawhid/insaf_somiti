@@ -12,7 +12,7 @@ class MemberDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('সদস্য বিবরণ'),
         backgroundColor: Colors.green[700],
@@ -538,7 +538,7 @@ class MemberDetailsScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LoanInstallmentScreen(
+        builder: (context) => SimpleInstallmentScreen(
           memberId: member.id??'',
         ),
       ),

@@ -134,8 +134,8 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
         totalPayable: _totalPayable,
         installmentAmount: installmentAmount,
         remainingBalance: _totalPayable,
-        // loanType: _selectedLoanType,
-        // installmentAmount: installmentAmount,
+        loanType: _getInstallmentType(),
+        //installmentAmount: installmentAmount,
         // totalInstallments: installmentCount,
         createdAt: DateTime.now(),
         currentTenureNumber: 0,
@@ -388,6 +388,23 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
       default:
         return 'কিস্তি';
     }
+
+
+  }
+
+  String _getInstallmentType() {
+    switch (_selectedLoanType) {
+      case 'দৈনিক':
+        return 'Daily';
+      case 'সাপ্তাহিক':
+        return 'Weekly';
+      case 'মাসিক':
+        return 'Monthly';
+      default:
+        return 'Daily';
+    }
+
+
   }
 
   Widget _buildMemberCard(Member member) {

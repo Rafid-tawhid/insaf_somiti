@@ -4,6 +4,7 @@ class Loan {
   final String memberName;
   final String memberNumber;
   final String memberMobile;
+  final String loanType;
   final double loanAmount;
   final double interestRate;
   final int tenureNumber;
@@ -25,6 +26,7 @@ class Loan {
     required this.memberMobile,
     required this.loanAmount,
     required this.interestRate,
+    required this.loanType,
     required this.tenureNumber,
     required this.loanPurpose,
     required this.currentTenureNumber,
@@ -43,6 +45,7 @@ class Loan {
       'memberName': memberName,
       'memberNumber': memberNumber,
       'memberMobile': memberMobile,
+      'loanType': loanType,
       'loanAmount': loanAmount,
       'interestRate': interestRate,
       'tenureNumber': tenureNumber,
@@ -64,6 +67,7 @@ class Loan {
       memberId: map['memberId'] ?? '',
       memberName: map['memberName'] ?? '',
       memberNumber: map['memberNumber'] ?? '',
+      loanType: map['loanType'] ?? '',
       memberMobile: map['memberMobile'] ?? '',
       currentTenureNumber: map['currentTenureNumber'] ?? '',
       loanAmount: (map['loanAmount'] ?? 0.0).toDouble(),
@@ -77,6 +81,48 @@ class Loan {
       remainingBalance: (map['remainingBalance'] ?? 0.0).toDouble(),
       totalPaid: (map['totalPaid'] ?? 0.0).toDouble(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
+    );
+  }
+
+  Loan copyWith({
+    String? id,
+    String? memberId,
+    String? memberName,
+    String? memberNumber,
+    String? memberMobile,
+    String? loanType,
+    double? loanAmount,
+    double? interestRate,
+    int? tenureNumber,
+    int? currentTenureNumber,
+    String? loanPurpose,
+    DateTime? loanDate,
+    String? status,
+    double? totalPayable,
+    double? installmentAmount,
+    double? remainingBalance,
+    double? totalPaid,
+    DateTime? createdAt,
+  }) {
+    return Loan(
+      id: id ?? this.id,
+      memberId: memberId ?? this.memberId,
+      memberName: memberName ?? this.memberName,
+      memberNumber: memberNumber ?? this.memberNumber,
+      memberMobile: memberMobile ?? this.memberMobile,
+      loanType: loanType ?? this.loanType,
+      loanAmount: loanAmount ?? this.loanAmount,
+      interestRate: interestRate ?? this.interestRate,
+      tenureNumber: tenureNumber ?? this.tenureNumber,
+      currentTenureNumber: currentTenureNumber ?? this.currentTenureNumber,
+      loanPurpose: loanPurpose ?? this.loanPurpose,
+      loanDate: loanDate ?? this.loanDate,
+      status: status ?? this.status,
+      totalPayable: totalPayable ?? this.totalPayable,
+      installmentAmount: installmentAmount ?? this.installmentAmount,
+      remainingBalance: remainingBalance ?? this.remainingBalance,
+      totalPaid: totalPaid ?? this.totalPaid,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }
