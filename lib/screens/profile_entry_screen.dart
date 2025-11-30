@@ -258,9 +258,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                       if (value.length != 11 || !value.startsWith('01')) {
                         return 'সঠিক মোবাইল নম্বর লিখুন';
                       }
-                      if (!_isMobileUnique) {
-                        return 'এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে';
-                      }
+
                       return null;
                     },
                   ),
