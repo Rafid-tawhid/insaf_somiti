@@ -231,7 +231,7 @@ class _SimpleInstallmentScreenState extends ConsumerState<SimpleInstallmentScree
     );
   }
 
-  Widget _buildPaymentSection(bool isLoading) {
+  Widget  _buildPaymentSection(bool isLoading) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -279,46 +279,6 @@ class _SimpleInstallmentScreenState extends ConsumerState<SimpleInstallmentScree
           ),
 
           const SizedBox(height: 20),
-
-          // Loan Selection (only if multiple loans)
-          if (_loans.length > 1) ...[
-            const Text(
-              'ঋণ নির্বাচন করুন:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButton<Loan>(
-                value: _selectedLoan,
-                isExpanded: true,
-                underline: const SizedBox(),
-                items: _loans.map((loan) {
-                  return DropdownMenuItem<Loan>(
-                    value: loan,
-                    child: Text(
-                      '${_currencyFormat.format(loan.loanAmount)} - ${loan.loanPurpose}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).toList(),
-                onChanged: (Loan? newValue) {
-                  setState(() {
-                    _selectedLoan = newValue;
-                    _amountController.text = newValue?.installmentAmount.toStringAsFixed(0) ?? '';
-                    if (newValue != null) {
-                      _loadTransactionsForLoan(newValue);
-                    }
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
 
           // Loan Summary
           if (_selectedLoan != null) ...[

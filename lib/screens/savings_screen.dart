@@ -337,7 +337,7 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                       _getButtonText(),
-                      style: const TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 16,color: Colors.white),
                     ),
                   ),
                 ),
