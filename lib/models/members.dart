@@ -13,6 +13,8 @@ class Member {
   final String guarantorNationalId;
   final String guarantorMobile;
   final double totalSavings;
+  final double loanTaken;
+  final double loanGiven;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isActive; // NEW FIELD
@@ -32,6 +34,8 @@ class Member {
     required this.guarantorNationalId,
     required this.guarantorMobile,
     this.totalSavings = 0.0,
+    this.loanTaken = 0.0,
+    this.loanGiven = 0.0,
     required this.createdAt,
     this.updatedAt,
     this.isActive = true, // DEFAULT VALUE
@@ -52,6 +56,8 @@ class Member {
     String? guarantorNationalId,
     String? guarantorMobile,
     double? totalSavings,
+    double? loanTaken,
+    double? loanGiven,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
@@ -71,6 +77,8 @@ class Member {
       guarantorNationalId: guarantorNationalId ?? this.guarantorNationalId,
       guarantorMobile: guarantorMobile ?? this.guarantorMobile,
       totalSavings: totalSavings ?? this.totalSavings,
+      loanTaken: totalSavings ?? this.loanTaken,
+      loanGiven: totalSavings ?? this.loanGiven,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
@@ -92,6 +100,8 @@ class Member {
       'guarantorNationalId': guarantorNationalId,
       'guarantorMobile': guarantorMobile,
       'totalSavings': totalSavings,
+      'loanTaken': loanTaken,
+      'loanGiven': loanGiven,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
       'isActive': isActive, // ADDED
@@ -114,6 +124,8 @@ class Member {
       guarantorNationalId: map['guarantorNationalId'] ?? '',
       guarantorMobile: map['guarantorMobile'] ?? '',
       totalSavings: (map['totalSavings'] ?? 0.0).toDouble(),
+      loanTaken: (map['loanTaken'] ?? 0.0).toDouble(),
+      loanGiven: (map['loanGiven'] ?? 0.0).toDouble(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
       updatedAt: map['updatedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'])

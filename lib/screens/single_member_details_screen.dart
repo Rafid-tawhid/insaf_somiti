@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:insaf_somiti/screens/savings_screen.dart';
 import '../models/members.dart';
+import '../providers/loan_provider.dart';
 import 'loan_application_screen.dart';
 import 'loan_installment_given_screen.dart';
 
@@ -16,6 +17,7 @@ class MemberDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('সদস্য বিবরণ'),
         backgroundColor: Colors.green[700],
+        foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
@@ -126,21 +128,60 @@ class MemberDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 // Savings Amount
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'মোট সঞ্চয়: ৳${member.totalSavings.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                Row(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'মোট সঞ্চয়: ৳${member.totalSavings.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
-                  ),
+                    Spacer(),
+                    FutureBuilder(
+                        future:  getMemberLoanInfoById(member.id??''),
+                        builder: (context, value) {
+                          return Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'মোট ঋণ: ৳${value.hasData ? value.requireData['totalPayable'] : '0.00'}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  'ঋণ প্রদান: ৳${value.hasData ? value.requireData['totalPaid']??'0.00' : '0.00'}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                    ),
+                  ],
                 ),
               ],
             ),

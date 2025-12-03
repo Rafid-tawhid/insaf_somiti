@@ -217,7 +217,7 @@ class FirebaseService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        return Loan.fromMap(doc.id, doc.data());
       }).toList();
     });
   }

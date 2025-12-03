@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../providers/loan_provider.dart';
 import '../providers/member_providers.dart';
 import '../providers/savings_provider.dart';
 import '../models/transaction_model.dart';
@@ -173,6 +174,8 @@ class _SavingsEntryScreenState extends ConsumerState<SavingsEntryScreen> {
       appBar: AppBar(
         title: Text(_getScreenTitle()),
         backgroundColor: _getPrimaryColor(),
+        actions: [
+        ],
       ),
       body: Column(
         children: [

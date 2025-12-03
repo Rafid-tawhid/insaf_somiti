@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:insaf_somiti/service/loan_service_class.dart';
 
 import '../models/loan_model.dart';
 import '../models/members.dart';
@@ -82,3 +83,13 @@ final loansProvider = StreamProvider<List<Loan>>((ref) {
   final firebaseService = ref.watch(firebaseServiceProvider);
   return firebaseService.getLoans();
 });
+
+
+
+
+Future<Map<String,dynamic>> getMemberLoanInfoById(String memberId) {
+  // This is a placeholder implementation.
+  // Replace with actual logic to fetch transactions for the given memberId.
+  final loanService = LoanServiceClass(); // Assume FirebaseService is defined elsewhere
+  return loanService.getMemberLoanInfoById(memberId);
+}
