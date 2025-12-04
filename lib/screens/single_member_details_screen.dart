@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:insaf_somiti/screens/savings_screen.dart';
+import 'package:insaf_somiti/screens/savings_withdraw_screen.dart';
 import '../models/members.dart';
 import '../providers/loan_provider.dart';
 import 'loan_application_screen.dart';
@@ -516,7 +516,7 @@ class MemberDetailsScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SavingsEntryScreen(
+          builder: (context) => SavingsWithdrawEntryScreen(
             memberId: member.id.toString(),
             transactionType: 'savings',
           ),
@@ -528,7 +528,7 @@ class MemberDetailsScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SavingsEntryScreen(
+          builder: (context) => SavingsWithdrawEntryScreen(
             memberId: member.id.toString(),
             transactionType: 'withdraw',
           ),

@@ -4,7 +4,7 @@ import 'package:insaf_somiti/screens/all_members_screen.dart';
 import 'package:insaf_somiti/screens/cashbox_screen.dart';
 import 'package:insaf_somiti/screens/loan_application_screen.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
-import 'package:insaf_somiti/screens/savings_screen.dart';
+import 'package:insaf_somiti/screens/savings_withdraw_screen.dart';
 import 'package:insaf_somiti/screens/transaction_report_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';

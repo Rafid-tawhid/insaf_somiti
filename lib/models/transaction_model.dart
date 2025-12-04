@@ -1,4 +1,4 @@
-class Transaction {
+class TransactionModel {
   final String? id;
   final String memberId;
   final String memberName;
@@ -12,7 +12,7 @@ class Transaction {
   final String? notes;
   final DateTime transactionDate;
 
-  Transaction({
+  TransactionModel({
     this.id,
     required this.memberId,
     required this.memberName,
@@ -43,8 +43,8 @@ class Transaction {
     };
   }
 
-  factory Transaction.fromMap(String id, Map<String, dynamic> map) {
-    return Transaction(
+  factory TransactionModel.fromMap(String id, Map<String, dynamic> map) {
+    return TransactionModel(
       id: id,
       memberId: map['memberId'] ?? '',
       memberName: map['memberName'] ?? '',
@@ -59,4 +59,11 @@ class Transaction {
       transactionDate: DateTime.fromMillisecondsSinceEpoch(map['transactionDate']),
     );
   }
+
+  @override
+  String toString() {
+    return 'TransactionModel{id: $id, memberId: $memberId, memberName: $memberName, memberNumber: $memberNumber, memberMobile: $memberMobile, transactionType: $transactionType, amount: $amount, balanceAfter: $balanceAfter, agentId: $agentId, agentName: $agentName, notes: $notes, transactionDate: $transactionDate}';
+  }
+
+
 }

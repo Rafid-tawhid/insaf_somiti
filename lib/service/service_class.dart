@@ -98,7 +98,7 @@ class FirebaseService {
       final newBalance = currentBalance + amount;
 
       // Create savings transaction
-      final transaction = Transaction(
+      final transaction = TransactionModel(
         memberId: memberId,
         memberName: member.memberName,
         memberNumber: member.memberNumber,
@@ -123,35 +123,33 @@ class FirebaseService {
     }
   }
 
-  // NEW: Get transaction history for a member
-  Stream<List<Transaction>> getMemberTransactions(String memberId) {
-    return _firestore
-        .collection('transactions')
-        .where('memberId', isEqualTo: memberId)
-        .orderBy('transactionDate', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return Transaction.fromMap(doc.id, doc.data());
-      }).toList();
-    });
+  Future<void> updateMemberSavings(String memberId, double newBalance) async {
+    try {
+      await _firestore.collection('members').doc(memberId).update({
+        'totalSavings': newBalance,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      throw Exception('সদস্যের ব্যালেন্স আপডেট করতে সমস্যা: $e');
+    }
   }
+
 
   // NEW: Get all transactions
-  Stream<List<Transaction>> getAllTransactions() {
+  Stream<List<TransactionModel>> getAllTransactions() {
     return _firestore
         .collection('transactions')
         .orderBy('transactionDate', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Transaction.fromMap(doc.id, doc.data());
+        return TransactionModel.fromMap(doc.id, doc.data());
       }).toList();
     });
   }
 
 
-  Stream<List<Transaction>> getAllTransactionsById(String id) {
+  Stream<List<TransactionModel>> getAllTransactionsById(String id) {
     return _firestore
         .collection('transactions')
         .where('memberId', isEqualTo: id) // <-- Filter by ID field
@@ -159,7 +157,7 @@ class FirebaseService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Transaction.fromMap(doc.id, doc.data());
+        return TransactionModel.fromMap(doc.id, doc.data());
       }).toList();
     });
   }
@@ -249,7 +247,7 @@ class FirebaseService {
   }
 
 
-  Stream<List<Transaction>> getTransactionsWithFilters(TransactionFilters filters) {
+  Stream<List<TransactionModel>> getTransactionsWithFilters(TransactionFilters filters) {
     CollectionReference transactionsRef = _firestore.collection('transactions');
     Query query = transactionsRef.orderBy('transactionDate', descending: true);
 
@@ -273,7 +271,7 @@ class FirebaseService {
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Transaction.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        return TransactionModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     });
   }
@@ -310,7 +308,7 @@ class FirebaseService {
       final newBalance = currentBalance - amount;
 
       // Create withdrawal transaction
-      final transaction = Transaction(
+      final transaction = TransactionModel(
         memberId: memberId,
         memberName: member.memberName,
         memberNumber: member.memberNumber,
@@ -349,16 +347,7 @@ class FirebaseService {
     }
   }
 
-  Future<void> updateMemberSavings(String memberId, double newBalance) async {
-    try {
-      await _firestore.collection('members').doc(memberId).update({
-        'totalSavings': newBalance,
-        'updatedAt': DateTime.now().millisecondsSinceEpoch,
-      });
-    } catch (e) {
-      throw Exception('সদস্যের ব্যালেন্স আপডেট করতে সমস্যা: $e');
-    }
-  }
+
 
 
   ///nov 29
@@ -404,7 +393,7 @@ class FirebaseService {
           .collection('transactions')
           .get()
           .then((snapshot) => snapshot.docs
-          .map((doc) => Transaction.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .map((doc) => TransactionModel.fromMap(doc.id, doc.data()))
           .toList());
 
       // Get all loans
@@ -412,7 +401,7 @@ class FirebaseService {
           .collection('loans')
           .get()
           .then((snapshot) => snapshot.docs
-          .map((doc) => Loan.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .map((doc) => Loan.fromMap(doc.id, doc.data()))
           .toList());
 
       // Get all members
@@ -473,7 +462,7 @@ class FirebaseService {
   }
 
 // Get recent transactions
-  Stream<List<Transaction>> getRecentTransactions({int limit = 10}) {
+  Stream<List<TransactionModel>> getRecentTransactions({int limit = 10}) {
     return _firestore
         .collection('transactions')
         .orderBy('transactionDate', descending: true)
@@ -481,7 +470,7 @@ class FirebaseService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return Transaction.fromMap(doc.id, doc.data());
+        return TransactionModel.fromMap(doc.id, doc.data());
       }).toList();
     });
   }

@@ -119,7 +119,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
   // exactly the same as before ...
 
   Widget _buildRecentActivity(
-      AsyncValue<List<Transaction>> transactions,
+      AsyncValue<List<TransactionModel>> transactions,
       AsyncValue<List<InstallmentTransaction>> installments,
       ) {
     return LayoutBuilder(
@@ -149,7 +149,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
     );
   }
 
-  Widget _buildRecentTransactions(AsyncValue<List<Transaction>> transactions) {
+  Widget _buildRecentTransactions(AsyncValue<List<TransactionModel>> transactions) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -287,7 +287,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
     );
   }
 
-  Widget _buildTransactionItem(Transaction transaction) {
+  Widget _buildTransactionItem(TransactionModel transaction) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),

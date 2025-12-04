@@ -14,7 +14,7 @@ final transactionFiltersProvider = StateProvider<TransactionFilters>((ref) {
 });
 
 // Filtered transactions provider
-final filteredTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
+final filteredTransactionsProvider = StreamProvider<List<TransactionModel>>((ref) {
   final filters = ref.watch(transactionFiltersProvider);
   final firebaseService = ref.watch(firebaseServiceProvider);
   return firebaseService.getTransactionsWithFilters(filters);
@@ -41,7 +41,7 @@ final cashboxSummaryProvider = FutureProvider<CashboxSummary>((ref) async {
   return await firebaseService.getCashboxSummary();
 });
 
-final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
+final recentTransactionsProvider = StreamProvider<List<TransactionModel>>((ref) {
   final firebaseService = ref.read(firebaseServiceProvider);
   return firebaseService.getRecentTransactions(limit: 5);
 });

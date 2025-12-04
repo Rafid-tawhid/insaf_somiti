@@ -3,7 +3,7 @@ import '../models/transaction_model.dart';
 import 'package:flutter/material.dart';
 
 class FinancialSummaryWidget extends StatelessWidget {
-  final List<Transaction> transactions;
+  final List<TransactionModel> transactions;
   final List<Loan> loans;
 
   const FinancialSummaryWidget({

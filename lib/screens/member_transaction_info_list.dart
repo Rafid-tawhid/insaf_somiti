@@ -9,7 +9,7 @@ import 'package:insaf_somiti/widgets/total_calculation.dart'; // Keep your exist
 
 // 1. Create a Data Class to hold all calculated data
 class HistoryData {
-  final List<Transaction> allTransactions;
+  final List<TransactionModel> allTransactions;
   final List<Loan> allLoans;
   final List<CombinedItem> allItems;
   final FinancialCalculations calculations;
@@ -24,7 +24,7 @@ class HistoryData {
 
 class CombinedHistoryScreen extends StatefulWidget {
   final String memberId;
-  final Stream<List<Transaction>> transactionStream;
+  final Stream<List<TransactionModel>> transactionStream;
   final Stream<List<Loan>> loanStream;
 
   const CombinedHistoryScreen({
@@ -110,7 +110,7 @@ class _CombinedHistoryScreenState extends State<CombinedHistoryScreen> {
     return CombineLatestStream.combine2(
       widget.transactionStream,
       widget.loanStream,
-          (List<Transaction> transactions, List<Loan> loans) {
+          (List<TransactionModel> transactions, List<Loan> loans) {
         // Process everything at once here
 
         // 1. Calculate Items
@@ -145,7 +145,7 @@ class _CombinedHistoryScreenState extends State<CombinedHistoryScreen> {
     );
   }
 
-  FinancialCalculations _calculateFinancials(List<Transaction> transactions, List<Loan> loans) {
+  FinancialCalculations _calculateFinancials(List<TransactionModel> transactions, List<Loan> loans) {
     double totalSavings = transactions
         .where((t) => t.transactionType.toLowerCase() == 'savings')
         .fold(0.0, (sum, t) => sum + t.amount);
@@ -303,7 +303,7 @@ class _CombinedHistoryScreenState extends State<CombinedHistoryScreen> {
   // KEEP: _buildTransactionItem, _buildLoanItem, _getItemColor, _getStatusColor, _isSameDay
   // KEEP: _buildLoadingWidget, _buildEmptyWidget, _buildErrorWidget, _formatTransactionType
 
-  Widget _buildTransactionItem(Transaction transaction) {
+  Widget _buildTransactionItem(TransactionModel transaction) {
     final isCredit = transaction.transactionType.toLowerCase() == 'savings';
     final color = isCredit ? Colors.green : Colors.red;
     final sign = isCredit ? '+' : '-';
@@ -521,7 +521,7 @@ enum ItemType { transaction, loan }
 class CombinedItem {
   final DateTime date;
   final ItemType type;
-  final Transaction? transaction;
+  final TransactionModel? transaction;
   final Loan? loan;
 
   CombinedItem({required this.date, required this.type, this.transaction, this.loan});

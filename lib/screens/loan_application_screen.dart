@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
-import 'package:insaf_somiti/screens/savings_screen.dart';
+import 'package:insaf_somiti/screens/savings_withdraw_screen.dart';
 import 'package:intl/intl.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
