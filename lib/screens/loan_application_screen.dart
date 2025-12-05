@@ -138,6 +138,7 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
         //installmentAmount: installmentAmount,
         // totalInstallments: installmentCount,
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
         currentTenureNumber: 0,
       );
 

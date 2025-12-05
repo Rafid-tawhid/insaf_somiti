@@ -140,6 +140,7 @@ class _SimpleInstallmentScreenState extends ConsumerState<SimpleInstallmentScree
         remainingBalance: newRemainingBalance,
         totalPaid: newTotalPaid,
         createdAt: _selectedLoan!.createdAt,
+        updatedAt: DateTime.now(),
         loanType: _selectedLoan!.loanType,
       );
 

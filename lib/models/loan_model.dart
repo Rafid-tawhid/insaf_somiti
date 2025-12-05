@@ -17,6 +17,7 @@ class Loan {
   final double remainingBalance;
   final double totalPaid;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   Loan({
     this.id,
@@ -37,6 +38,7 @@ class Loan {
     required this.remainingBalance,
     this.totalPaid = 0.0,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -58,6 +60,7 @@ class Loan {
       'remainingBalance': remainingBalance,
       'totalPaid': totalPaid,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
   }
 
@@ -69,7 +72,7 @@ class Loan {
       memberNumber: map['memberNumber'] ?? '',
       loanType: map['loanType'] ?? '',
       memberMobile: map['memberMobile'] ?? '',
-      currentTenureNumber: map['currentTenureNumber'] ?? '',
+      currentTenureNumber: map['currentTenureNumber'] ?? 0,
       loanAmount: (map['loanAmount'] ?? 0.0).toDouble(),
       interestRate: (map['interestRate'] ?? 0.0).toDouble(),
       tenureNumber: map['tenureNumber'] ?? 0,
@@ -81,6 +84,7 @@ class Loan {
       remainingBalance: (map['remainingBalance'] ?? 0.0).toDouble(),
       totalPaid: (map['totalPaid'] ?? 0.0).toDouble(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt']??DateTime.now().millisecondsSinceEpoch),
     );
   }
 
@@ -103,6 +107,7 @@ class Loan {
     double? remainingBalance,
     double? totalPaid,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return Loan(
       id: id ?? this.id,
@@ -123,6 +128,7 @@ class Loan {
       remainingBalance: remainingBalance ?? this.remainingBalance,
       totalPaid: totalPaid ?? this.totalPaid,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
