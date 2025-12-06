@@ -8,9 +8,7 @@ import '../providers/member_providers.dart';
 import '../providers/savings_provider.dart';
 import '../models/transaction_model.dart';
 
-
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
-
 
 class SavingsWithdrawEntryScreen extends ConsumerStatefulWidget {
   final String memberId;
@@ -23,10 +21,12 @@ class SavingsWithdrawEntryScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<SavingsWithdrawEntryScreen> createState() => _SavingsWithdrawEntryScreenState();
+  ConsumerState<SavingsWithdrawEntryScreen> createState() =>
+      _SavingsWithdrawEntryScreenState();
 }
 
-class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntryScreen> {
+class _SavingsWithdrawEntryScreenState
+    extends ConsumerState<SavingsWithdrawEntryScreen> {
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -52,21 +52,25 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
       const agentName = 'এজেন্ট';
 
       if (widget.transactionType == 'savings') {
-        await ref.read(firebaseServiceProvider).addSavings(
-          memberId: widget.memberId,
-          amount: amount,
-          agentId: agentId,
-          agentName: agentName,
-          notes: _notesController.text,
-        );
+        await ref
+            .read(firebaseServiceProvider)
+            .addSavings(
+              memberId: widget.memberId,
+              amount: amount,
+              agentId: agentId,
+              agentName: agentName,
+              notes: _notesController.text,
+            );
       } else {
-        await ref.read(firebaseServiceProvider).addWithdrawal(
-          memberId: widget.memberId,
-          amount: amount,
-          agentId: agentId,
-          agentName: agentName,
-          notes: _notesController.text,
-        );
+        await ref
+            .read(firebaseServiceProvider)
+            .addWithdrawal(
+              memberId: widget.memberId,
+              amount: amount,
+              agentId: agentId,
+              agentName: agentName,
+              notes: _notesController.text,
+            );
       }
 
       _amountController.clear();
@@ -81,19 +85,13 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -167,15 +165,16 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
   @override
   Widget build(BuildContext context) {
     final savingsState = ref.watch(savingsFormProvider);
-    final transactionsStream = ref.watch(firebaseServiceProvider).getAllTransactionsById(widget.memberId);
+    final transactionsStream = ref
+        .watch(firebaseServiceProvider)
+        .getAllTransactionsById(widget.memberId);
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(_getScreenTitle()),
         backgroundColor: _getPrimaryColor(),
-        actions: [
-        ],
+        actions: [],
       ),
       body: Column(
         children: [
@@ -267,16 +266,23 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (transaction.notes != null && transaction.notes!.isNotEmpty)
+                            if (transaction.notes != null &&
+                                transaction.notes!.isNotEmpty)
                               Text('মন্তব্য: ${transaction.notes}'),
                             Text('এজেন্ট: ${transaction.agentName}'),
-                            Text('ব্যালেন্স: ৳${transaction.balanceAfter.toStringAsFixed(2)}'),
+                            Text(
+                              'ব্যালেন্স: ৳${transaction.balanceAfter.toStringAsFixed(2)}',
+                            ),
                           ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(DateFormat('dd/MM/yy').format(transaction.transactionDate)),
+                            Text(
+                              DateFormat(
+                                'dd/MM/yy',
+                              ).format(transaction.transactionDate),
+                            ),
                             PopupMenuButton<String>(
                               icon: const Icon(Icons.more_vert),
                               onSelected: (value) async {
@@ -325,7 +331,10 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 // Transaction Type Display (Read-only)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: _getLightColor(),
                     border: Border.all(color: _getBorderColor()),
@@ -363,16 +372,21 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: savingsState.isLoading ? null : _submitTransaction,
+                    onPressed: savingsState.isLoading
+                        ? null
+                        : _submitTransaction,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _getPrimaryColor(),
                     ),
                     child: savingsState.isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                      _getButtonText(),
-                      style: const TextStyle(fontSize: 16,color: Colors.white),
-                    ),
+                            _getButtonText(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -421,7 +435,9 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 children: [
                   TextField(
                     controller: editAmountController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Amount',
                       border: const OutlineInputBorder(),
@@ -454,68 +470,71 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 onPressed: isSaving
                     ? null
                     : () async {
-                  final newAmount =
-                      double.tryParse(editAmountController.text) ?? 0.0;
+                        final newAmount =
+                            double.tryParse(editAmountController.text) ?? 0.0;
 
-                  if (newAmount <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter a valid amount'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
+                        if (newAmount <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter a valid amount'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
 
-                  setState(() => isSaving = true);
+                        setState(() => isSaving = true);
 
-                  try {
-                    await ref
-                        .read(editTransactionProvider.notifier)
-                        .updateTransaction(
-                      memberId: widget.memberId,
-                      transactionId: transaction.id ?? '',
-                      newAmount: newAmount,
-                      notes: editNotesController.text.trim(),
-                    );
+                        try {
+                          await ref
+                              .read(editTransactionProvider.notifier)
+                              .updateTransaction(
+                                memberId: widget.memberId,
+                                transactionId: transaction.id ?? '',
+                                newAmount: newAmount,
+                                notes: editNotesController.text.trim(),
+                              );
 
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              '${_getTransactionTypeText(transaction.transactionType)} updated successfully'),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    setState(() => isSaving = false);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: $e'),
-                          backgroundColor: Colors.red,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  }
-                },
+
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${_getTransactionTypeText(transaction.transactionType)} updated successfully',
+                                ),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() => isSaving = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _getPrimaryColor(),
                 ),
                 child: isSaving
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Text('Save',style: TextStyle(color: Colors.white),),
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Save', style: TextStyle(color: Colors.white)),
               ),
             ],
           );
@@ -547,10 +566,7 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 const Expanded(
                   child: Text(
                     'Confirm Delete',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
               ],
@@ -590,7 +606,9 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _getTransactionTypeText(transaction.transactionType),
+                            _getTransactionTypeText(
+                              transaction.transactionType,
+                            ),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -606,7 +624,8 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                           color: Colors.black87,
                         ),
                       ),
-                      if (transaction.notes != null && transaction.notes!.isNotEmpty)
+                      if (transaction.notes != null &&
+                          transaction.notes!.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -624,10 +643,7 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                       const SizedBox(height: 4),
                       Text(
                         'Date: ${DateFormat('dd/MM/yyyy').format(transaction.transactionDate)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -635,20 +651,19 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 const SizedBox(height: 4),
                 Text(
                   'Are you sure you want to delete this transaction?',
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(color: Colors.grey[700]),
                 ),
               ],
             ),
             actions: [
               TextButton(
-                onPressed: isDeleting
-                    ? null
-                    : () => Navigator.pop(context),
+                onPressed: isDeleting ? null : () => Navigator.pop(context),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.grey[700],
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
                 child: const Text('Cancel'),
               ),
@@ -656,65 +671,70 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
                 onPressed: isDeleting
                     ? null
                     : () async {
-                  setState(() => isDeleting = true);
+                        setState(() => isDeleting = true);
 
-                  try {
-                    await ref.read(deleteTransactionProvider.notifier).deleteTransaction(
-                      memberId: widget.memberId,
-                      transactionId: transaction.id ?? '',
-                    );
+                        try {
+                          await ref
+                              .read(deleteTransactionProvider.notifier)
+                              .deleteTransaction(
+                                memberId: widget.memberId,
+                                transactionId: transaction.id ?? '',
+                              );
 
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${_getTransactionTypeText(transaction.transactionType)} deleted successfully',
-                          ),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    setState(() => isDeleting = false);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: $e'),
-                          backgroundColor: Colors.red,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  }
-                },
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${_getTransactionTypeText(transaction.transactionType)} deleted successfully',
+                                ),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() => isDeleting = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 child: isDeleting
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                     : const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.delete_outline, size: 18),
-                    SizedBox(width: 6),
-                    Text('Delete'),
-                  ],
-                ),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline, size: 18),
+                          SizedBox(width: 6),
+                          Text('Delete'),
+                        ],
+                      ),
               ),
             ],
           );
@@ -722,6 +742,4 @@ class _SavingsWithdrawEntryScreenState extends ConsumerState<SavingsWithdrawEntr
       ),
     );
   }
-
 }
-

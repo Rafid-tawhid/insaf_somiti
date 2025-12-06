@@ -89,6 +89,9 @@ class FirebaseService {
       for (final transaction in transactions) {
         if (transaction.transactionType == 'savings') {
           currentBalance += transaction.amount;
+          _firestore.collection('members').doc(memberId).update({
+            'lastSavingsGiven': DateTime.now().millisecondsSinceEpoch,
+          });
         } else if (transaction.transactionType == 'withdrawal') {
           currentBalance -= transaction.amount;
         }
@@ -367,7 +370,7 @@ class FirebaseService {
     await _firestore.collection('loans').doc(loan.id).update(loan.toMap());
     await _firestore.collection('members').doc(loan.memberId).update({
       'lastLoanGiven': DateTime.now().millisecondsSinceEpoch,
-      'loanGiven':loan.loanAmount
+      'loanGiven':loan.totalPaid
     });
   }
 

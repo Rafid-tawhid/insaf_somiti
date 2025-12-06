@@ -17,6 +17,7 @@ class SavingsServiceClass {
     String? newNotes,
   }) async {
     try {
+
       // Get the existing transaction
       final transactionDoc = await _firestore
           .collection('transactions')
@@ -41,9 +42,6 @@ class SavingsServiceClass {
           .where('memberId', isEqualTo: memberId)
           .orderBy('transactionDate', descending: false)
           .get();
-
-
-      _firestore.collection('members').doc(memberId).update({'lastSavingsGiven': DateTime.now().millisecondsSinceEpoch});
 
       final transactions = transactionsSnapshot.docs;
       List<Map<String, dynamic>> transactionsToUpdate = [];
@@ -97,9 +95,10 @@ class SavingsServiceClass {
         batch.update(update['docRef'] as DocumentReference, update['data'] as Map<String, dynamic>);
       }
 
-      // Update member's total savings
+      // Update member's total savings and lastSavingsGiven
       final memberTransactions = await getAllTransactionsById(memberId).first;
       double newTotalBalance = 0;
+
       for (final transaction in memberTransactions) {
         if (transaction.transactionType == 'savings') {
           newTotalBalance += transaction.amount;
@@ -109,15 +108,24 @@ class SavingsServiceClass {
       }
 
       // Update member document
+      final memberUpdateData = <String, dynamic>{
+        'totalSavings': newTotalBalance,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      };
+
+      // If it's a savings transaction, update lastLoanGiven
+      if (transactionType == 'savings') {
+        memberUpdateData['lastSavingsGiven'] = DateTime.now().millisecondsSinceEpoch;
+      }
+
       batch.update(
         _firestore.collection('members').doc(memberId),
-        {
-          'totalSavings': newTotalBalance,
-          'updatedAt': DateTime.now().millisecondsSinceEpoch,
-        },
+        memberUpdateData,
       );
 
       await batch.commit();
+
+
 
     } catch (e) {
       throw Exception('লেনদেন আপডেট করতে সমস্যা: $e');
@@ -260,6 +268,10 @@ class SavingsServiceClass {
       throw Exception('Member not found');
     }
     return Member.fromMap(doc.id,doc.data()!);
+  }
+
+  void callLastGivenUpdate(String memberId) {
+    debugPrint('Calling last given update for memberId: $memberId');
   }
 
 

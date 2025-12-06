@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
 import 'package:insaf_somiti/screens/single_member_details_screen.dart';
+import 'package:intl/intl.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
 import '../providers/loan_provider.dart';
@@ -102,7 +103,8 @@ class _MemberListScreenState extends State<MemberListScreen>
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              _handlePopupMenuSelection(value);
+
+             // _handlePopupMenuSelection(value);
             },
             itemBuilder: (BuildContext context) => [
               const PopupMenuItem<String>(
@@ -117,6 +119,7 @@ class _MemberListScreenState extends State<MemberListScreen>
               ),
               const PopupMenuItem<String>(
                 value: 'stats',
+
                 child: Row(
                   children: [
                     Icon(Icons.analytics, size: 20),
@@ -359,7 +362,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                           ),
                         ),
                         Spacer(),
-                        Text('${member.lastSavingsGiven}')
+                       if(member.lastSavingsGiven!=null) Text(DateFormat('dd/MM/yyyy').format(member.lastSavingsGiven!))
 
                       ],
                     ),
@@ -380,7 +383,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                           ),
                         ),
                         Spacer(),
-                        Text('${member.lastLoanGiven}')
+                        Text(DateFormat('dd/MM/yyyy').format(member.lastLoanGiven!))
 
                       ],
                     ),
