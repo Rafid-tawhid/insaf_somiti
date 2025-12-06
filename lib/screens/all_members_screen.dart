@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
 import 'package:insaf_somiti/screens/single_member_details_screen.dart';
+import '../models/loan_model.dart';
 import '../models/members.dart';
+import '../providers/loan_provider.dart';
 
 class MemberListScreen extends StatefulWidget {
   const MemberListScreen({Key? key}) : super(key: key);
@@ -355,6 +358,30 @@ class _MemberListScreenState extends State<MemberListScreen>
                             fontSize: 14,
                           ),
                         ),
+                        Spacer(),
+                        Text('${member.lastSavingsGiven}')
+
+                      ],
+                    ),
+                   if(member.isLoanActive) Row(
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet,
+                          color: Colors.red[700],
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '৳${member.loanGiven.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Spacer(),
+                        Text('${member.lastLoanGiven}')
+
                       ],
                     ),
                   ],

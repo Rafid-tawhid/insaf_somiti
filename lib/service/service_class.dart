@@ -203,6 +203,9 @@ class FirebaseService {
       var loanWithId=loan.copyWith(id: id.id);
 
       await _firestore.collection('loans').add(loanWithId.toMap());
+      await _firestore.collection('members').doc(loan.memberId).update({
+        'isLoanActive': true,
+      });
     } catch (e) {
       throw Exception('Failed to add loan: $e');
     }
@@ -362,6 +365,10 @@ class FirebaseService {
   Future<void> updateLoan(Loan loan) async {
     if (loan.id == null) throw Exception('Loan ID is required for update');
     await _firestore.collection('loans').doc(loan.id).update(loan.toMap());
+    await _firestore.collection('members').doc(loan.memberId).update({
+      'lastLoanGiven': DateTime.now().millisecondsSinceEpoch,
+      'loanGiven':loan.loanAmount
+    });
   }
 
 

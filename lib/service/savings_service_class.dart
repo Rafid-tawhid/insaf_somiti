@@ -42,6 +42,9 @@ class SavingsServiceClass {
           .orderBy('transactionDate', descending: false)
           .get();
 
+
+      _firestore.collection('members').doc(memberId).update({'lastSavingsGiven': DateTime.now().millisecondsSinceEpoch});
+
       final transactions = transactionsSnapshot.docs;
       List<Map<String, dynamic>> transactionsToUpdate = [];
 

@@ -17,7 +17,10 @@ class Member {
   final double loanGiven;
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final bool isActive; // NEW FIELD
+  final bool isActive;
+  final bool isLoanActive; // NEW FIELD - added
+  final DateTime? lastSavingsGiven; // NEW FIELD - added
+  final DateTime? lastLoanGiven; // NEW FIELD - added
 
   Member({
     this.id,
@@ -38,7 +41,10 @@ class Member {
     this.loanGiven = 0.0,
     required this.createdAt,
     this.updatedAt,
-    this.isActive = true, // DEFAULT VALUE
+    this.isActive = true,
+    this.isLoanActive = false, // DEFAULT VALUE - added
+    this.lastSavingsGiven, // Default null - added
+    this.lastLoanGiven, // Default null - added
   });
 
   Member copyWith({
@@ -61,6 +67,9 @@ class Member {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    bool? isLoanActive, // Added
+    DateTime? lastSavingsGiven, // Added
+    DateTime? lastLoanGiven, // Added
   }) {
     return Member(
       id: id ?? this.id,
@@ -77,11 +86,14 @@ class Member {
       guarantorNationalId: guarantorNationalId ?? this.guarantorNationalId,
       guarantorMobile: guarantorMobile ?? this.guarantorMobile,
       totalSavings: totalSavings ?? this.totalSavings,
-      loanTaken: totalSavings ?? this.loanTaken,
-      loanGiven: totalSavings ?? this.loanGiven,
+      loanTaken: loanTaken ?? this.loanTaken, // Fixed: was incorrectly using totalSavings
+      loanGiven: loanGiven ?? this.loanGiven, // Fixed: was incorrectly using totalSavings
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      isLoanActive: isLoanActive ?? this.isLoanActive, // Added
+      lastSavingsGiven: lastSavingsGiven ?? this.lastSavingsGiven, // Added
+      lastLoanGiven: lastLoanGiven ?? this.lastLoanGiven, // Added
     );
   }
 
@@ -104,7 +116,10 @@ class Member {
       'loanGiven': loanGiven,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
-      'isActive': isActive, // ADDED
+      'isActive': isActive,
+      'isLoanActive': isLoanActive, // ADDED
+      'lastSavingsGiven': lastSavingsGiven?.millisecondsSinceEpoch, // ADDED - null safe
+      'lastLoanGiven': lastLoanGiven?.millisecondsSinceEpoch, // ADDED - null safe
     };
   }
 
@@ -130,7 +145,14 @@ class Member {
       updatedAt: map['updatedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'])
           : null,
-      isActive: map['isActive'] ?? true, // ADDED
+      isActive: map['isActive'] ?? true,
+      isLoanActive: map['isLoanActive'] ?? false, // ADDED
+      lastSavingsGiven: map['lastSavingsGiven'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['lastSavingsGiven'])
+          : null, // ADDED
+      lastLoanGiven: map['lastLoanGiven'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['lastLoanGiven'])
+          : null, // ADDED
     );
   }
 }

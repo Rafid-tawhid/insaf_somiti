@@ -26,7 +26,11 @@ class LoanServiceClass {
       'totalPayable': totalPayable,
     };
 
+
   }
+
+
+
 
 
 }
