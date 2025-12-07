@@ -43,7 +43,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.blue[800],
+        backgroundColor: Colors.green[800],
         elevation: 0,
         actions: [
           IconButton(
@@ -354,10 +354,10 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Icon(Icons.payment, color: Colors.blue, size: 16),
+            child: const Icon(Icons.payment, color: Colors.green, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -379,7 +379,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
             _currencyFormat.format(installment.amount),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.blue,
+              color: Colors.green,
               fontSize: 12,
             ),
           ),
@@ -397,12 +397,12 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.blue[700]!, Colors.blue[900]!],
+          colors: [Colors.green[700]!, Colors.green[900]!],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.green.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -562,7 +562,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.analytics, color: Colors.blue),
+              Icon(Icons.analytics, color: Colors.green),
               SizedBox(width: 8),
               Text(
                 'আর্থিক সারাংশ',
@@ -594,7 +594,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: isTotal ? Colors.green : Colors.blue, size: 20),
+          Icon(icon, color: isTotal ? Colors.green : Colors.green, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -609,7 +609,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
             _currencyFormat.format(amount),
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isTotal ? Colors.green : Colors.blue,
+              color: isTotal ? Colors.green : Colors.green,
               fontSize: isTotal ? 16 : 14,
             ),
           ),

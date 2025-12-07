@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:insaf_somiti/screens/savings_withdraw_screen.dart';
+import 'package:insaf_somiti/service/member_service_class.dart';
 import '../models/members.dart';
 import '../providers/loan_provider.dart';
+import '../providers/member_providers.dart';
 import 'loan_application_screen.dart';
 import 'loan_installment_given_screen.dart';
 
@@ -21,17 +25,22 @@ class MemberDetailsScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit, size: 20),
-            onPressed: () {
-              // Edit member functionality
+            icon: const Icon(Icons.info, size: 20),
+            onPressed: () async {
+
+              showMemberStatusDialog(context: context, memberName: member.memberName, currentStatus: member.isActive, onStatusChanged: (v){
+
+                if(v){
+                  MemberServiceClass service=MemberServiceClass();
+                  service.activeMember(member.id??'', member.isActive? false : true);
+                  Navigator.pop(context);
+                }
+              });
+
+
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.share, size: 20),
-            onPressed: () {
-              _shareMemberDetails(context);
-            },
-          ),
+          )
+
         ],
       ),
       body: Column(
@@ -361,6 +370,58 @@ class MemberDetailsScreen extends StatelessWidget {
     );
   }
 
+  void showMemberStatusDialog({
+    required BuildContext context,
+    required String memberName,
+    required bool currentStatus,
+    required Function(bool) onStatusChanged,
+  }) {
+    bool newStatus = !currentStatus;
+    String actionText = newStatus ? 'Activate' : 'Deactivate';
+    String dialogTitle = newStatus ? 'Activate Member' : 'Deactivate Member';
+    String dialogMessage = newStatus
+        ? 'Are you sure you want to activate $memberName?'
+        : 'Are you sure you want to deactivate $memberName?';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                newStatus ? Icons.check_circle : Icons.remove_circle,
+                color: newStatus ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 10),
+              Text(dialogTitle),
+            ],
+          ),
+          content: Text(dialogMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onStatusChanged(true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: newStatus ? Colors.green : Colors.orange,
+              ),
+              child: Text(
+                actionText,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildActionButton({
     required IconData icon,
     required Color iconColor,
@@ -551,29 +612,7 @@ class MemberDetailsScreen extends StatelessWidget {
   }
 
 
-  void _shareMemberDetails(BuildContext context) {
-    // Share functionality
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('শেয়ার করুন'),
-        content: const Text('সদস্য তথ্য শেয়ার করুন'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('বাতিল'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Implement share functionality
-            },
-            child: const Text('শেয়ার'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _navigateToLoanCollect(BuildContext context, Member member) {
     Navigator.push(

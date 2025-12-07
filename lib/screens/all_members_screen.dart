@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
 import '../providers/loan_provider.dart';
+import '../widgets/installment_widget.dart';
 
 class MemberListScreen extends StatefulWidget {
   const MemberListScreen({Key? key}) : super(key: key);
@@ -354,7 +355,7 @@ class _MemberListScreenState extends State<MemberListScreen>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '৳${member.totalSavings.toStringAsFixed(2)}',
+                          'Savings: ৳${member.totalSavings.toStringAsFixed(2)}',
                           style: TextStyle(
                             color: Colors.green[700],
                             fontWeight: FontWeight.w600,
@@ -374,16 +375,12 @@ class _MemberListScreenState extends State<MemberListScreen>
                           size: 16,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          '৳${member.loanGiven.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(DateFormat('dd/MM/yyyy').format(member.lastLoanGiven!))
+                        if(member.lastLoanGiven!=null&&member.isLoanActive) InstallmentStatus(
+                          givenDate: member.lastLoanGiven!,
+                          loanType: member.loanType??'',
+                          member: member,
+                        )
+
 
                       ],
                     ),

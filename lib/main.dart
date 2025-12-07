@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -564,6 +565,7 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 // Home Page
+
 class HomePage extends StatelessWidget {
   final User user;
 
@@ -571,136 +573,537 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('ইনসাফ সমিতি'),
-        backgroundColor: Colors.green,
-        elevation: 0,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                FirebaseAuth.instance.signOut();
-              } else if (value == 'profile') {
-                // Navigate to profile page
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text('প্রোফাইল'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('লগআউট'),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          // App Bar with Gradient
+          SliverAppBar(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.green,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(15),
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF1B5E20), // Dark green
+                      Color(0xFF4CAF50), // Green
+                      Color(0xFF81C784), // Light green
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'স্বাগতম!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[900],
+                child: SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'স্বাগতম',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  user.email?.split('@').first ?? 'সদস্য',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // User Avatar with online image
+
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        // Stats Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatCard(
+                              icon: Icons.person_3_outlined,
+                              value: '২৫০+',
+                              label: 'সদস্য',
+                            ),
+                            _buildStatCard(
+                              icon: Icons.savings_outlined,
+                              value: '৳১৫ লাখ',
+                              label: 'সঞ্চয়',
+                            ),
+                            _buildStatCard(
+                              icon: Icons.request_quote_outlined,
+                              value: '৳১০ লাখ',
+                              label: 'ঋণ',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.notifications_outlined, color: Colors.white, size: 26),
+                onPressed: () {},
+              ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  if (value == 'logout') {
+                    FirebaseAuth.instance.signOut();
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'profile',
+                      child: ListTile(
+                        leading: Icon(Icons.person_outline, color: Colors.green),
+                        title: Text('প্রোফাইল'),
                       ),
                     ),
-                    SizedBox(height: 5),
-                    Text(
-                      user.email ?? 'সদস্য',
-                      style: TextStyle(fontSize: 16, color: Colors.green[700]),
+                    PopupMenuItem<String>(
+                      value: 'settings',
+                      child: ListTile(
+                        leading: Icon(Icons.settings_outlined, color: Colors.blue),
+                        title: Text('সেটিংস'),
+                      ),
                     ),
-                    if (!user.emailVerified) ...[
-                      SizedBox(height: 10),
+                    PopupMenuItem<String>(
+                      value: 'help',
+                      child: ListTile(
+                        leading: Icon(Icons.help_outline, color: Colors.orange),
+                        title: Text('সাহায্য'),
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'logout',
+                      child: ListTile(
+                        leading: Icon(Icons.logout, color: Colors.red),
+                        title: Text('লগআউট'),
+                      ),
+                    ),
+                  ];
+                },
+              ),
+            ],
+          ),
+
+          // Main Content
+          SliverPadding(
+            padding: EdgeInsets.all(20),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Welcome Card with online image
+                Container(
+                  margin: EdgeInsets.only(bottom: 25),
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFE8F5E9), Colors.white],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop&q=60',
+                      ),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.white.withOpacity(0.1),
+                        BlendMode.dstATop,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ইনসাফ সমিতি',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B5E20),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'ক্ষুদ্র ঋণ ও সমবায় সমিতি লিমিটেড',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            SizedBox(height: 15),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF1B5E20), Color(0xFF4CAF50)],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                              child: Text(
+                                'সদস্য নম্বর: #${user.uid.substring(0, 8).toUpperCase()}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 15),
                       Container(
-                        padding: EdgeInsets.all(10),
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.orange[50],
-                          borderRadius: BorderRadius.circular(8),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.green, width: 2),
+                        ),
+                        child: ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: 'https://cdn-icons-png.flaticon.com/512/5256/5256228.png',
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.green,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.handshake,
+                              color: Colors.green,
+                              size: 40,
+                            ),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Quick Actions Title
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'দ্রুত এক্সেস',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B5E20),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: Colors.green[100]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 14, color: Colors.green),
+                          SizedBox(width: 6),
+                          Text(
+                            '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green[800],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildFeatureCard(
+                            iconUrl: 'https://icon-library.com/images/member-icon-png/member-icon-png-28.jpg',
+                            title: 'সদস্য তালিকা',
+                            subtitle: 'ব্যবস্থাপনা',
+                            color: Color(0xFF2196F3),
+                            context: context,
+                            index: 0
+                        ),
+                      ),
+                      SizedBox(width: 16,),
+                      Expanded(
+                        child: _buildFeatureCard(
+                            iconUrl: 'https://cdn-icons-png.flaticon.com/512/103/103849.png',
+                            title: 'ক্যাশ বক্স',
+                            subtitle: 'লেনদেন',
+                            color: Color(0xFF4CAF50),
+                            context: context,
+                            index: 1
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 30),
+
+
+
+                // Bottom Info Card with online image
+                Container(
+                  padding: EdgeInsets.all(25),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60',
+                      ),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.7),
+                        BlendMode.darken,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.security, color: Colors.white, size: 30),
+                          SizedBox(width: 15),
+                          Expanded(
+                            child: Text(
+                              'আপনার তথ্য সম্পূর্ণ নিরাপদ',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 15),
+                      Text(
+                        'আমরা উন্নত এনক্রিপশন প্রযুক্তি ব্যবহার করি যাতে আপনার সকল লেনদেন তথ্য সম্পূর্ণরূপে সুরক্ষিত থাকে।',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.6,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.warning, color: Colors.orange, size: 16),
+                            Icon(Icons.verified_user, color: Colors.green, size: 18),
                             SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'ইমেইল ভেরিফাই করা প্রয়োজন',
-                                style: TextStyle(color: Colors.orange[800], fontSize: 12),
+                            Text(
+                              'SSL সুরক্ষিত',
+                              style: TextStyle(
+                                color: Colors.green[800],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ],
-                  ],
-                ),
-              ),
-              SizedBox(height: 30),
-
-              // User Info Card
-              Card(
-                child: ListTile(
-                  leading: Icon(Icons.email, color: Colors.green),
-                  title: Text('ইমেইল: ${user.email ?? 'N/A'}'),
-                  subtitle: Text(
-                    user.emailVerified ? 'ভেরিফাইড' : 'ভেরিফাই করা হয়নি',
-                    style: TextStyle(
-                      color: user.emailVerified ? Colors.green : Colors.orange,
-                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 15),
 
-              // Quick Actions
-              Text(
-                'দ্রুত এক্সেস:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 15),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  children: [
-                    _buildActionCard('👥 প্রোফাইল', Icons.person, Colors.purple,context,1),
-                    _buildActionCard('💰 ক্যাশ বক্স', Icons.attach_money, Colors.blue,context,2),
+                SizedBox(height: 40),
+              ]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildStatCard({required IconData icon, required String value, required String label}) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 30,
+            height: 30,
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.white.withOpacity(0.9),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required String iconUrl,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required BuildContext context,
+    required int index,
+  }) {
+    return Material(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white,
+      elevation: 5,
+      child: InkWell(
+        onTap: () {
+          // Add navigation logic here
+          if(index==0){
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MemberListScreen()),
+            );
+          }
+          if(index==1){
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CashboxScreen()),
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [color.withOpacity(0.05), Colors.transparent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: color.withOpacity(0.1), width: 1),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated icon container
+              Container(
+                width: 60,
+                height: 60,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
                   ],
                 ),
+                child: CachedNetworkImage(
+                  imageUrl: iconUrl,
+                  placeholder: (context, url) => CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.category,
+                    color: color,
+                    size: 24,
+                  ),
+                  color: color,
+                ),
+              ),
+              SizedBox(height: 15),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.grey[800],
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 5),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -709,46 +1112,92 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color,BuildContext context,int index) {
-    return Card(
-      elevation: 3,
-      child: InkWell(
-        onTap: () {
-          if(index==2){
-            //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>CashboxScreen()));
-          }
-
-          // if(index==2){
-          //   //SavingsEntryScreen
-          //   Navigator.push(context, MaterialPageRoute(builder: (context)=>SavingsEntryScreen()));
-          // }
-          // if(index==3){
-          //   //SavingsEntryScreen
-          //   Navigator.push(context, MaterialPageRoute(builder: (context)=>CombinedReportScreen()));
-          // }
-          if(index==1){
-            //SavingsEntryScreen
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>MemberListScreen()));
-          }
-
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 30, color: color),
-              SizedBox(height: 8),
-              Text(
-                title,
-                style: TextStyle(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+  Widget _buildActivityItem({
+    required String avatarUrl,
+    required String name,
+    required String action,
+    required String amount,
+    required String time,
+    required Color color,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.3), width: 2),
+            ),
+            child: ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: avatarUrl,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.person,
+                  color: color,
+                  size: 24,
+                ),
+                fit: BoxFit.cover,
               ),
-            ],
+            ),
           ),
-        ),
+          SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  action,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withOpacity(0.2)),
+            ),
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

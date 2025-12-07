@@ -208,6 +208,7 @@ class FirebaseService {
       await _firestore.collection('loans').add(loanWithId.toMap());
       await _firestore.collection('members').doc(loan.memberId).update({
         'isLoanActive': true,
+        'loanType': loan.loanType,
       });
     } catch (e) {
       throw Exception('Failed to add loan: $e');

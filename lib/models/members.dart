@@ -21,6 +21,7 @@ class Member {
   final bool isLoanActive; // NEW FIELD - added
   final DateTime? lastSavingsGiven; // NEW FIELD - added
   final DateTime? lastLoanGiven; // NEW FIELD - added
+  final String? loanType;
 
   Member({
     this.id,
@@ -44,7 +45,8 @@ class Member {
     this.isActive = true,
     this.isLoanActive = false, // DEFAULT VALUE - added
     this.lastSavingsGiven, // Default null - added
-    this.lastLoanGiven, // Default null - added
+    this.lastLoanGiven,
+    this.loanType// Default null - added
   });
 
   Member copyWith({
@@ -70,6 +72,7 @@ class Member {
     bool? isLoanActive, // Added
     DateTime? lastSavingsGiven, // Added
     DateTime? lastLoanGiven, // Added
+    String? loanType,// Added
   }) {
     return Member(
       id: id ?? this.id,
@@ -94,6 +97,7 @@ class Member {
       isLoanActive: isLoanActive ?? this.isLoanActive, // Added
       lastSavingsGiven: lastSavingsGiven ?? this.lastSavingsGiven, // Added
       lastLoanGiven: lastLoanGiven ?? this.lastLoanGiven, // Added
+      loanType: loanType ?? this.loanType,// Added
     );
   }
 
@@ -120,6 +124,7 @@ class Member {
       'isLoanActive': isLoanActive, // ADDED
       'lastSavingsGiven': lastSavingsGiven?.millisecondsSinceEpoch, // ADDED - null safe
       'lastLoanGiven': lastLoanGiven?.millisecondsSinceEpoch, // ADDED - null safe
+      'loanType': loanType,// ADDED
     };
   }
 
@@ -153,6 +158,7 @@ class Member {
       lastLoanGiven: map['lastLoanGiven'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['lastLoanGiven'])
           : null, // ADDED
+      loanType: map['loanType']??'',// ADDED
     );
   }
 }
