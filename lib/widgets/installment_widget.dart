@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:insaf_somiti/models/members.dart';
-import 'package:intl/intl.dart';
+
 
 class InstallmentStatus extends StatelessWidget {
   final DateTime givenDate;
@@ -23,7 +23,6 @@ class InstallmentStatus extends StatelessWidget {
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
     );
   }
-
   String generateMessage(DateTime date, String type) {
     final today = DateTime.now();
 
