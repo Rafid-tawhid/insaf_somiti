@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:insaf_somiti/screens/profile_entry_screen.dart';
 import 'package:insaf_somiti/screens/savings_withdraw_screen.dart';
 import 'package:insaf_somiti/service/member_service_class.dart';
 import '../models/members.dart';
@@ -24,23 +25,62 @@ class MemberDetailsScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info, size: 20),
-            onPressed: () async {
-
-              showMemberStatusDialog(context: context, memberName: member.memberName, currentStatus: member.isActive, onStatusChanged: (v){
-
-                if(v){
-                  MemberServiceClass service=MemberServiceClass();
-                  service.activeMember(member.id??'', member.isActive? false : true);
-                  Navigator.pop(context);
-                }
-              });
-
-
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              debugPrint(value);
+              if (value == 'Edit') {
+                // Navigate to edit member
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MemberEntryScreen(
+                      member: member, // Pass the member object
+                      isEditMode: true, // Set edit mode to true
+                    ),
+                  ),
+                );
+              } else {
+                showMemberStatusDialog(
+                  context: context,
+                  memberName: member.memberName,
+                  currentStatus: member.isActive,
+                  onStatusChanged: (v) {
+                    if (v) {
+                      MemberServiceClass service = MemberServiceClass();
+                      service.activeMember(
+                        member.id ?? '',
+                        member.isActive ? false : true,
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
+                );
+              }
             },
-          )
-
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'Edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit,color: Colors.green,),
+                    SizedBox(width: 8),
+                    Text('Edit'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: member.isActive ? 'Deactivate' : 'Activate',
+                child: Row(
+                  children: [
+                    Icon(Icons.person,color:!member.isActive? Colors.green:Colors.red,),
+                    const SizedBox(width: 8),
+                    Text(member.isActive ? 'Deactivate' : 'Activate'),
+                  ],
+                ),
+              ),
+            ],
+            icon: const Icon(Icons.edit),
+          ),
         ],
       ),
       body: Column(
@@ -53,10 +93,7 @@ class MemberDetailsScreen extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.green[700]!,
-                  Colors.green[600]!,
-                ],
+                colors: [Colors.green[700]!, Colors.green[600]!],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(24),
@@ -74,17 +111,11 @@ class MemberDetailsScreen extends StatelessWidget {
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 3,
-                        ),
+                        border: Border.all(color: Colors.white, width: 3),
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Colors.green[100]!,
-                            Colors.green[200]!,
-                          ],
+                          colors: [Colors.green[100]!, Colors.green[200]!],
                         ),
                       ),
                       child: Icon(
@@ -102,10 +133,7 @@ class MemberDetailsScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: member.isActive ? Colors.green : Colors.red,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
                         child: Icon(
                           member.isActive ? Icons.check : Icons.close,
@@ -141,7 +169,10 @@ class MemberDetailsScreen extends StatelessWidget {
                   children: [
                     Container(
                       margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -157,38 +188,41 @@ class MemberDetailsScreen extends StatelessWidget {
                     ),
                     Spacer(),
                     FutureBuilder(
-                        future:  getMemberLoanInfoById(member.id??''),
-                        builder: (context, value) {
-                          return Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'মোট ঋণ: ৳${value.hasData ? value.requireData['totalPayable'] : '0.00'}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
+                      future: getMemberLoanInfoById(member.id ?? ''),
+                      builder: (context, value) {
+                        return Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'মোট ঋণ: ৳${value.hasData ? value.requireData['totalPayable'] : '0.00'}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                                 ),
-                                Text(
-                                  'ঋণ প্রদান: ৳${value.hasData ? value.requireData['totalPaid']??'0.00' : '0.00'}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
+                              ),
+                              Text(
+                                'ঋণ প্রদান: ৳${value.hasData ? value.requireData['totalPaid'] ?? '0.00' : '0.00'}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                                 ),
-                              ],
-                            ),
-                          );
-                        }
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -221,7 +255,8 @@ class MemberDetailsScreen extends StatelessWidget {
                         iconColor: Colors.green,
                         backgroundColor: Colors.green[50]!,
                         label: 'সঞ্চয় আদায়',
-                        onTap: () => _navigateToHisab(context, member,'savings')
+                        onTap: () =>
+                            _navigateToHisab(context, member, 'savings'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -231,7 +266,8 @@ class MemberDetailsScreen extends StatelessWidget {
                         iconColor: Colors.red,
                         backgroundColor: Colors.red[50]!,
                         label: 'সঞ্চয় উত্তোলন',
-                        onTap: () => _navigateToHisab(context, member,'withdraw'),
+                        onTap: () =>
+                            _navigateToHisab(context, member, 'withdraw'),
                       ),
                     ),
                   ],
@@ -261,8 +297,7 @@ class MemberDetailsScreen extends StatelessWidget {
                   ],
                 ),
               ],
-            )
-            ,
+            ),
           ),
 
           // Details Section
@@ -513,9 +548,7 @@ class MemberDetailsScreen extends StatelessWidget {
           // Section Content
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              children: items,
-            ),
+            child: Column(children: items),
           ),
         ],
       ),
@@ -535,11 +568,7 @@ class MemberDetailsScreen extends StatelessWidget {
               color: Colors.grey[100],
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: Colors.grey[600],
-            ),
+            child: Icon(icon, size: 16, color: Colors.grey[600]),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -571,9 +600,8 @@ class MemberDetailsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToHisab(BuildContext context, Member member,String type) {
-
-    if(type=='savings'){
+  void _navigateToHisab(BuildContext context, Member member, String type) {
+    if (type == 'savings') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -584,8 +612,7 @@ class MemberDetailsScreen extends StatelessWidget {
         ),
       );
       return;
-    }
-    else {
+    } else {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -596,33 +623,25 @@ class MemberDetailsScreen extends StatelessWidget {
         ),
       );
     }
-
-
   }
 
   void _navigateToLoan(BuildContext context, Member member) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LoanApplicationScreen(
-          memberId: member.id.toString(),
-        ),
+        builder: (context) =>
+            LoanApplicationScreen(memberId: member.id.toString()),
       ),
     );
   }
-
-
-
 
   void _navigateToLoanCollect(BuildContext context, Member member) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SimpleInstallmentScreen(
-          memberId: member.id??'',
-        ),
+        builder: (context) =>
+            SimpleInstallmentScreen(memberId: member.id ?? ''),
       ),
     );
   }
-
 }

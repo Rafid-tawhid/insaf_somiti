@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:insaf_somiti/models/members.dart';
 
-
 class InstallmentStatus extends StatelessWidget {
   final DateTime givenDate;
   final String loanType;

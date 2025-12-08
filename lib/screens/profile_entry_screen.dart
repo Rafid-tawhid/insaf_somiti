@@ -12,8 +12,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/members.dart';
 import '../providers/member_providers.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 class MemberEntryScreen extends ConsumerStatefulWidget {
-  const MemberEntryScreen({Key? key}) : super(key: key);
+  final Member? member; // Add this parameter for edit mode
+  final bool isEditMode; // Add this to track if we're editing
+
+  const MemberEntryScreen({
+    Key? key,
+    this.member, // Make it optional for add mode
+    this.isEditMode = false, // Default is false (add mode)
+  }) : super(key: key);
 
   @override
   ConsumerState<MemberEntryScreen> createState() => _MemberEntryScreenState();
@@ -25,16 +35,64 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
   final FocusNode _mobileFocusNode = FocusNode();
   bool _isCheckingMobile = false;
   bool _isMobileUnique = true;
+  bool _isEditMode = false;
+  String? _memberId; // Store member ID for updates
 
   @override
   void initState() {
     super.initState();
-    _mobileFocusNode.addListener(_onMobileFocusChange);
+    WidgetsBinding.instance.addPostFrameCallback((v){
+      _isEditMode = widget.isEditMode;
+
+      if (_isEditMode && widget.member != null) {
+        debugPrint('Member Id is ${widget.member!.id}');
+        _memberId = widget.member!.id;
+        _initializeFormWithMemberData(widget.member!);
+        setState(() {
+
+        });
+      }
+      _mobileFocusNode.addListener(_onMobileFocusChange);
+    });
+  }
+
+  void _initializeFormWithMemberData(Member member) {
+    // Initialize all text controllers with member data
+    _controllers[0].text = member.memberNumber;
+    _controllers[1].text = member.memberName;
+    _controllers[2].text = member.fatherOrHusbandName;
+    _controllers[3].text = member.memberMobile;
+    _controllers[4].text = member.nationalIdOrBirthCertificate;
+    _controllers[5].text = member.nomineeName;
+    _controllers[6].text = member.nomineeRelation;
+    _controllers[7].text = member.nomineeMobile;
+    _controllers[8].text = member.nomineeNationalId;
+    _controllers[9].text = member.guarantorName;
+    _controllers[10].text = member.guarantorNationalId;
+    _controllers[11].text = member.guarantorMobile;
+
+    // Update the provider with existing data
+    final memberNotifier = ref.read(memberFormProvider.notifier);
+    memberNotifier.updateMemberNumber(member.memberNumber);
+    memberNotifier.updateMemberName(member.memberName);
+    memberNotifier.updateFatherOrHusbandName(member.fatherOrHusbandName);
+    memberNotifier.updateMemberMobile(member.memberMobile);
+    memberNotifier.updateNationalId(member.nationalIdOrBirthCertificate);
+    memberNotifier.updateNomineeName(member.nomineeName);
+    memberNotifier.updateNomineeRelation(member.nomineeRelation);
+    memberNotifier.updateNomineeMobile(member.nomineeMobile);
+    memberNotifier.updateNomineeNationalId(member.nomineeNationalId);
+    memberNotifier.updateGuarantorName(member.guarantorName);
+    memberNotifier.updateGuarantorNationalId(member.guarantorNationalId);
+    memberNotifier.updateGuarantorMobile(member.guarantorMobile);
   }
 
   void _onMobileFocusChange() {
     if (!_mobileFocusNode.hasFocus && _controllers[3].text.isNotEmpty) {
-      _checkMobileUnique(_controllers[3].text);
+      // Only check mobile uniqueness in add mode or if mobile number changed in edit mode
+      if (!_isEditMode || (_isEditMode && widget.member?.memberMobile != _controllers[3].text)) {
+        _checkMobileUnique(_controllers[3].text);
+      }
     }
   }
 
@@ -47,7 +105,6 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
     });
 
     try {
-      final firebaseService = ref.read(firebaseServiceProvider);
       final snapshot = await FirebaseFirestore.instance
           .collection('members')
           .where('memberMobile', isEqualTo: mobile)
@@ -55,7 +112,13 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
           .get();
 
       setState(() {
-        _isMobileUnique = snapshot.docs.isEmpty;
+        // In edit mode, allow the same mobile number if it belongs to the same member
+        if (_isEditMode && widget.member != null) {
+          _isMobileUnique = snapshot.docs.isEmpty ||
+              snapshot.docs.first.id == widget.member!.id;
+        } else {
+          _isMobileUnique = snapshot.docs.isEmpty;
+        }
       });
     } catch (e) {
       print('Error checking mobile uniqueness: $e');
@@ -104,42 +167,112 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
       final member = ref.read(memberFormProvider);
       final firebaseService = ref.read(firebaseServiceProvider);
 
-      // Final check for mobile uniqueness
-      final snapshot = await FirebaseFirestore.instance
-          .collection('members')
-          .where('memberMobile', isEqualTo: member.memberMobile)
-          .limit(1)
-          .get();
+      if (_isEditMode && _memberId != null) {
+        // Create a map with only changed fields
+        final Map<String, dynamic> updatedData = {};
 
-      if (snapshot.docs.isNotEmpty) {
+        // Compare each field with original member data
+        if (_controllers[0].text != widget.member!.memberNumber) {
+          updatedData['memberNumber'] = _controllers[0].text;
+        }
+        if (_controllers[1].text != widget.member!.memberName) {
+          updatedData['memberName'] = _controllers[1].text;
+        }
+        if (_controllers[2].text != widget.member!.fatherOrHusbandName) {
+          updatedData['fatherOrHusbandName'] = _controllers[2].text;
+        }
+        if (_controllers[3].text != widget.member!.memberMobile) {
+          updatedData['memberMobile'] = _controllers[3].text;
+        }
+        if (_controllers[4].text != widget.member!.nationalIdOrBirthCertificate) {
+          updatedData['nationalIdOrBirthCertificate'] = _controllers[4].text;
+        }
+        if (_controllers[5].text != widget.member!.nomineeName) {
+          updatedData['nomineeName'] = _controllers[5].text;
+        }
+        if (_controllers[6].text != widget.member!.nomineeRelation) {
+          updatedData['nomineeRelation'] = _controllers[6].text;
+        }
+        if (_controllers[7].text != widget.member!.nomineeMobile) {
+          updatedData['nomineeMobile'] = _controllers[7].text;
+        }
+        if (_controllers[8].text != widget.member!.nomineeNationalId) {
+          updatedData['nomineeNationalId'] = _controllers[8].text;
+        }
+        if (_controllers[9].text != widget.member!.guarantorName) {
+          updatedData['guarantorName'] = _controllers[9].text;
+        }
+        if (_controllers[10].text != widget.member!.guarantorNationalId) {
+          updatedData['guarantorNationalId'] = _controllers[10].text;
+        }
+        if (_controllers[11].text != widget.member!.guarantorMobile) {
+          updatedData['guarantorMobile'] = _controllers[11].text;
+        }
+
+        // Add updated timestamp
+        updatedData['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+
+        // Only update if there are changes
+        if (updatedData.isNotEmpty) {
+          await firebaseService.updateMember(updatedData, _memberId!);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('সদস্য তথ্য সফলভাবে আপডেট করা হয়েছে!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('কোনো পরিবর্তন পাওয়া যায়নি!'),
+              backgroundColor: Colors.blue,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+
+        // Navigate back
+        Navigator.pop(context, true);
+      } else {
+        // Add new member - keep existing code
+        final snapshot = await FirebaseFirestore.instance
+            .collection('members')
+            .where('memberMobile', isEqualTo: member.memberMobile)
+            .limit(1)
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে!'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+
+        await firebaseService.addMember(member);
+
+        // Reset form
+        ref.read(memberFormProvider.notifier).resetForm();
+        for (var controller in _controllers) {
+          controller.clear();
+        }
+        setState(() {
+          _isMobileUnique = true;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে!'),
-            backgroundColor: Colors.red,
+            content: const Text('সদস্য সফলভাবে যোগ করা হয়েছে!'),
+            backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
         );
-        return;
       }
-
-      await firebaseService.addMember(member);
-
-      // Reset form
-      ref.read(memberFormProvider.notifier).resetForm();
-      for (var controller in _controllers) {
-        controller.clear();
-      }
-      setState(() {
-        _isMobileUnique = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('সদস্য সফলভাবে যোগ করা হয়েছে!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -158,15 +291,15 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'নতুন সদস্য যোগ করুন',
-          style: TextStyle(
+        title: Text(
+          _isEditMode ? 'সদস্য তথ্য সম্পাদনা করুন' : 'নতুন সদস্য যোগ করুন',
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[700],
+        backgroundColor: _isEditMode ? Colors.orange[700] : Colors.green[700],
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -234,7 +367,9 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     onChanged: (value) {
                       memberNotifier.updateMemberMobile(value);
                       if (value.length == 11) {
-                        _checkMobileUnique(value);
+                        if (!_isEditMode || (_isEditMode && widget.member?.memberMobile != value)) {
+                          _checkMobileUnique(value);
+                        }
                       }
                     },
                     isRequired: true,
@@ -244,7 +379,8 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                        : _controllers[3].text.isNotEmpty
+                        : _controllers[3].text.isNotEmpty &&
+                        (!_isEditMode || (_isEditMode && widget.member?.memberMobile != _controllers[3].text))
                         ? Icon(
                       _isMobileUnique ? Icons.check_circle : Icons.error,
                       color: _isMobileUnique ? Colors.green : Colors.red,
@@ -258,7 +394,6 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                       if (value.length != 11 || !value.startsWith('01')) {
                         return 'সঠিক মোবাইল নম্বর লিখুন';
                       }
-
                       return null;
                     },
                   ),
@@ -358,7 +493,6 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     hintText: 'জামিনদারের পুরো নাম লিখুন',
                     controller: _controllers[9],
                     onChanged: memberNotifier.updateGuarantorName,
-
                   ),
                   CustomTextField(
                     label: 'জামিনদারের জাতীয় পরিচয় পত্র',
@@ -366,7 +500,6 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     keyboardType: TextInputType.number,
                     controller: _controllers[10],
                     onChanged: memberNotifier.updateGuarantorNationalId,
-
                   ),
                   CustomTextField(
                     label: 'জামিনদারের মোবাইল নং',
@@ -374,7 +507,6 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                     keyboardType: TextInputType.phone,
                     controller: _controllers[11],
                     onChanged: memberNotifier.updateGuarantorMobile,
-
                   ),
                 ],
               ),
@@ -395,19 +527,25 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: _isEditMode ? Colors.orange[50] : Colors.blue[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(color: _isEditMode ? Colors.orange[200]! : Colors.blue[200]!),
       ),
       child: Row(
         children: [
-          Icon(Icons.info, color: Colors.blue[700], size: 24),
+          Icon(
+            _isEditMode ? Icons.edit : Icons.info,
+            color: _isEditMode ? Colors.orange[700] : Colors.blue[700],
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'সকল তথ্য সঠিকভাবে পূরণ করুন। মোবাইল নম্বর ইউনিক হতে হবে।',
+              _isEditMode
+                  ? 'সদস্যের তথ্য সম্পাদনা করুন। মোবাইল নম্বর পরিবর্তন করলে ইউনিক চেক হবে।'
+                  : 'সকল তথ্য সঠিকভাবে পূরণ করুন। মোবাইল নম্বর ইউনিক হতে হবে।',
               style: TextStyle(
-                color: Colors.blue[800],
+                color: _isEditMode ? Colors.orange[800] : Colors.blue[800],
                 fontSize: 14,
               ),
             ),
@@ -424,16 +562,19 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
       child: ElevatedButton.icon(
         onPressed: _submitForm,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green[700],
+          backgroundColor: _isEditMode ? Colors.orange[700] : Colors.green[700],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 2,
         ),
-        icon: const Icon(Icons.save, color: Colors.white),
-        label: const Text(
-          'সদস্য সংরক্ষণ করুন',
-          style: TextStyle(
+        icon: Icon(
+          _isEditMode ? Icons.update : Icons.save,
+          color: Colors.white,
+        ),
+        label: Text(
+          _isEditMode ? 'আপডেট করুন' : 'সদস্য সংরক্ষণ করুন',
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -442,6 +583,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
       ),
     );
   }
+
 
   Widget _buildSectionCard({
     required String title,
@@ -470,7 +612,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
               children: [
                 Icon(
                   icon,
-                  color: Colors.green[700],
+                  color: _isEditMode ? Colors.orange[700] : Colors.green[700],
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -479,7 +621,7 @@ class _MemberEntryScreenState extends ConsumerState<MemberEntryScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
+                    color: _isEditMode ? Colors.orange[700] : Colors.green[700],
                   ),
                 ),
               ],

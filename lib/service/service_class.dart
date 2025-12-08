@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
+import 'package:flutter/cupertino.dart';
 import '../models/cashbox_summery.dart';
 import '../models/loan_installment.dart';
 import '../models/loan_model.dart';
@@ -15,6 +16,14 @@ class FirebaseService {
       await _firestore.collection('members').add(member.toMap());
     } catch (e) {
       throw Exception('Failed to add member: $e');
+    }
+  }
+  Future<void> updateMember(dynamic member,String id) async {
+    try {
+      debugPrint('Updating member with ID: $id');
+      await _firestore.collection('members').doc(id).update(member);
+    } catch (e) {
+      throw Exception('Failed to update member: $e');
     }
   }
 
