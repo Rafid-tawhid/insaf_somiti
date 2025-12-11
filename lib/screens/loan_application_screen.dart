@@ -74,6 +74,7 @@ class _LoanApplicationScreenState extends ConsumerState<LoanApplicationScreen> {
       setState(() => _isLoadingMember = false);
     }
   }
+  //
 
   void _checkNomineeInfo(Member member) {
     final hasNomineeInfo = member.nomineeName.isNotEmpty &&
