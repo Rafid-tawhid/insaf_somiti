@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:flutter/cupertino.dart';
 import '../models/cashbox_summery.dart';
+import '../models/general_cost.dart';
 import '../models/loan_installment.dart';
 import '../models/loan_model.dart';
 import '../models/members.dart';
@@ -404,82 +405,6 @@ class FirebaseService {
 
 
 
-  // Add these methods to your FirebaseService class
-
-  Future<CashboxSummary> getCashboxSummary() async {
-    try {
-      // Get all transactions
-      final allTransactions = await _firestore
-          .collection('transactions')
-          .get()
-          .then((snapshot) => snapshot.docs
-          .map((doc) => TransactionModel.fromMap(doc.id, doc.data()))
-          .toList());
-
-      // Get all loans
-      final allLoans = await _firestore
-          .collection('loans')
-          .get()
-          .then((snapshot) => snapshot.docs
-          .map((doc) => Loan.fromMap(doc.id, doc.data()))
-          .toList());
-
-      // Get all members
-      final allMembers = await _firestore
-          .collection('members')
-          .get()
-          .then((snapshot) => snapshot.docs.length);
-
-      // Calculate totals
-      double totalSavings = 0;
-      double totalWithdrawals = 0;
-      double totalLoanGiven = 0;
-      double totalLoanCollected = 0;
-      double totalLoanPending = 0;
-      int activeLoans = 0;
-      int completedLoans = 0;
-
-      // Calculate transaction totals
-      for (final transaction in allTransactions) {
-        if (transaction.transactionType == 'savings') {
-          totalSavings += transaction.amount;
-        } else if (transaction.transactionType == 'withdrawal') {
-          totalWithdrawals += transaction.amount;
-        }
-      }
-
-      // Calculate loan totals
-      for (final loan in allLoans) {
-        totalLoanGiven += loan.loanAmount;
-        totalLoanCollected += loan.totalPaid;
-        totalLoanPending += loan.remainingBalance;
-
-        if (loan.status == 'active') {
-          activeLoans++;
-        } else if (loan.status == 'completed') {
-          completedLoans++;
-        }
-      }
-
-      // Calculate current balance
-      final currentBalance = totalSavings - totalWithdrawals + totalLoanCollected;
-
-      return CashboxSummary(
-        totalSavings: totalSavings,
-        totalWithdrawals: totalWithdrawals,
-        totalLoanGiven: totalLoanGiven,
-        totalLoanCollected: totalLoanCollected,
-        totalLoanPending: totalLoanPending,
-        currentBalance: currentBalance,
-        totalMembers: allMembers,
-        activeLoans: activeLoans,
-        completedLoans: completedLoans,
-        lastUpdated: DateTime.now(),
-      );
-    } catch (e) {
-      throw Exception('ক্যাশবক্স তথ্য লোড করতে সমস্যা: $e');
-    }
-  }
 
 // Get recent transactions
   Stream<List<TransactionModel>> getRecentTransactions({int limit = 10}) {
@@ -506,6 +431,146 @@ class FirebaseService {
         return InstallmentTransaction.fromMap(doc.id, doc.data() as Map<String, dynamic>);
       }).toList();
     });
+  }
+
+
+
+
+  // Add to your FirebaseService class
+
+// Add general cost
+  Future<void> addGeneralCost({
+    required double amount,
+    required String note,
+    required DateTime date,
+  }) async {
+    try {
+      await _firestore.collection('general_costs').add({
+        'amount': amount,
+        'note': note,
+        'date': date.millisecondsSinceEpoch,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      throw Exception('খরচ যোগ করতে সমস্যা: $e');
+    }
+  }
+
+// Get all general costs
+  Future<List<GeneralCost>> getGeneralCosts() async {
+    try {
+      final snapshot = await _firestore
+          .collection('general_costs')
+          .orderBy('date', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => GeneralCost.fromMap(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      throw Exception('খরচ লোড করতে সমস্যা: $e');
+    }
+  }
+
+
+
+// Update getCashboxSummary method
+  Future<CashboxSummary> getCashboxSummary() async {
+    try {
+      // Get all transactions
+      final allTransactions = await _firestore
+          .collection('transactions')
+          .get()
+          .then((snapshot) => snapshot.docs
+          .map((doc) => TransactionModel.fromMap(doc.id, doc.data()))
+          .toList());
+
+      // Get all loans
+      final allLoans = await _firestore
+          .collection('loans')
+          .get()
+          .then((snapshot) => snapshot.docs
+          .map((doc) => Loan.fromMap(doc.id, doc.data()))
+          .toList());
+
+      // Get all members
+      final allMembers = await _firestore
+          .collection('members')
+          .get()
+          .then((snapshot) => snapshot.docs.length);
+
+      // Get all general costs
+      final allGeneralCosts = await _firestore
+          .collection('general_costs')
+          .get()
+          .then((snapshot) => snapshot.docs
+          .map((doc) => GeneralCost.fromMap(doc.id, doc.data()))
+          .toList());
+
+      // Calculate totals
+      double totalSavings = 0;
+      double totalWithdrawals = 0;
+      double totalLoanGiven = 0;
+      double totalLoanCollected = 0;
+      double totalLoanPending = 0;
+      double totalGeneralCost = 0;
+      int activeLoans = 0;
+      int completedLoans = 0;
+
+      // Calculate transaction totals
+      for (final transaction in allTransactions) {
+        if (transaction.transactionType == 'savings') {
+          totalSavings += transaction.amount;
+        } else if (transaction.transactionType == 'withdrawal') {
+          totalWithdrawals += transaction.amount;
+        }
+      }
+
+      // Calculate loan totals
+      for (final loan in allLoans) {
+        totalLoanGiven += loan.loanAmount;
+        totalLoanCollected += loan.totalPaid;
+        totalLoanPending += loan.remainingBalance;
+
+        if (loan.status == 'active') {
+          activeLoans++;
+        } else if (loan.status == 'completed') {
+          completedLoans++;
+        }
+      }
+
+      // Calculate general costs total
+      for (final cost in allGeneralCosts) {
+        totalGeneralCost += cost.amount;
+      }
+
+      // Calculate balances based on your requirements:
+      // 1. Loan Balance = Total Loan Given - Total Loan Collected
+      // 2. Net Savings = Total Savings - Total Withdrawals - Total General Costs
+      // 3. Total Cash = Net Savings + Total Loan Collected
+      final loanBalance = totalLoanGiven - totalLoanCollected;
+      final netSavings = totalSavings - totalWithdrawals - totalGeneralCost;
+      final totalCash = netSavings + totalLoanCollected;
+
+      return CashboxSummary(
+        totalSavings: totalSavings,
+        totalWithdrawals: totalWithdrawals,
+        totalLoanGiven: totalLoanGiven,
+        totalLoanCollected: totalLoanCollected,
+        totalLoanPending: totalLoanPending,
+        totalGeneralCost: totalGeneralCost,
+        loanBalance: loanBalance, // Loan yet to be collected
+        netSavings: netSavings, // Savings after withdrawals and costs
+        totalCash: totalCash, // Total cash available/ Keep for compatibility
+        totalMembers: allMembers,
+        activeLoans: activeLoans,
+        completedLoans: completedLoans,
+        lastUpdated: DateTime.now(),
+      );
+    } catch (e) {
+      throw Exception('ক্যাশবক্স তথ্য লোড করতে সমস্যা: $e');
+    }
   }
 
 }

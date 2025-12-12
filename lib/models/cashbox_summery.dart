@@ -1,11 +1,14 @@
-// models/cashbox_summary_model.dart
+// models/cashbox_summery.dart
 class CashboxSummary {
   final double totalSavings;
   final double totalWithdrawals;
   final double totalLoanGiven;
   final double totalLoanCollected;
   final double totalLoanPending;
-  final double currentBalance;
+  final double totalGeneralCost;
+  final double loanBalance; // Loan yet to be collected
+  final double netSavings; // Savings after withdrawals and costs
+  final double totalCash; // Total cash available
   final int totalMembers;
   final int activeLoans;
   final int completedLoans;
@@ -17,40 +20,13 @@ class CashboxSummary {
     required this.totalLoanGiven,
     required this.totalLoanCollected,
     required this.totalLoanPending,
-    required this.currentBalance,
+    required this.totalGeneralCost,
+    required this.loanBalance,
+    required this.netSavings,
+    required this.totalCash,
     required this.totalMembers,
     required this.activeLoans,
     required this.completedLoans,
     required this.lastUpdated,
   });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'totalSavings': totalSavings,
-      'totalWithdrawals': totalWithdrawals,
-      'totalLoanGiven': totalLoanGiven,
-      'totalLoanCollected': totalLoanCollected,
-      'totalLoanPending': totalLoanPending,
-      'currentBalance': currentBalance,
-      'totalMembers': totalMembers,
-      'activeLoans': activeLoans,
-      'completedLoans': completedLoans,
-      'lastUpdated': lastUpdated.millisecondsSinceEpoch,
-    };
-  }
-
-  factory CashboxSummary.fromMap(Map<String, dynamic> map) {
-    return CashboxSummary(
-      totalSavings: (map['totalSavings'] ?? 0.0).toDouble(),
-      totalWithdrawals: (map['totalWithdrawals'] ?? 0.0).toDouble(),
-      totalLoanGiven: (map['totalLoanGiven'] ?? 0.0).toDouble(),
-      totalLoanCollected: (map['totalLoanCollected'] ?? 0.0).toDouble(),
-      totalLoanPending: (map['totalLoanPending'] ?? 0.0).toDouble(),
-      currentBalance: (map['currentBalance'] ?? 0.0).toDouble(),
-      totalMembers: map['totalMembers'] ?? 0,
-      activeLoans: map['activeLoans'] ?? 0,
-      completedLoans: map['completedLoans'] ?? 0,
-      lastUpdated: DateTime.fromMillisecondsSinceEpoch(map['lastUpdated']),
-    );
-  }
 }

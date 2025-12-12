@@ -7,14 +7,6 @@ import '../models/loan_installment.dart';
 import '../models/transaction_model.dart';
 import '../providers/member_providers.dart';
 import '../providers/transaction_report_provider.dart';
-import '../service/service_class.dart';
-
-// screens/cashbox_screen.dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../models/transaction_model.dart';
-import '../service/service_class.dart';
 
 class CashboxScreen extends ConsumerStatefulWidget {
   const CashboxScreen({Key? key}) : super(key: key);
@@ -389,6 +381,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
   }
 
 
+  // In _buildBalanceCard method, replace with:
   Widget _buildBalanceCard(CashboxSummary summary) {
     return Container(
       width: double.infinity,
@@ -411,7 +404,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
       child: Column(
         children: [
           const Text(
-            'বর্তমান ব্যালেন্স',
+            'মোট নগদ টাকা',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 16,
@@ -419,7 +412,7 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _currencyFormat.format(summary.currentBalance),
+            _currencyFormat.format(summary.totalCash),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
@@ -430,10 +423,94 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildBalanceItem('মোট সঞ্চয়', summary.totalSavings, Icons.savings),
-              _buildBalanceItem('মোট উত্তোলন', summary.totalWithdrawals, Icons.money_off),
+              _buildBalanceItem('নেট সঞ্চয়', summary.netSavings, Icons.savings),
               _buildBalanceItem('ঋণ আদায়', summary.totalLoanCollected, Icons.payments),
+              _buildBalanceItem('ঋণ বাকি', summary.loanBalance, Icons.pending),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// In _buildFinancialOverview method, update:
+  Widget _buildFinancialOverview(CashboxSummary summary) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.analytics, color: Colors.green),
+              SizedBox(width: 8),
+              Text(
+                'আর্থিক সারাংশ',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildFinancialRow('মোট ঋণ প্রদান', summary.totalLoanGiven, Icons.credit_card),
+          _buildFinancialRow('ঋণ আদায়', summary.totalLoanCollected, Icons.payment),
+          _buildFinancialRow('ঋণ বাকি', summary.loanBalance, Icons.pending,
+              color: summary.loanBalance > 0 ? Colors.red : Colors.green),
+          const SizedBox(height: 8),
+          Divider(color: Colors.grey[300]),
+          const SizedBox(height: 8),
+          _buildFinancialRow('মোট সঞ্চয়', summary.totalSavings, Icons.savings),
+          _buildFinancialRow('মোট উত্তোলন', summary.totalWithdrawals, Icons.money_off),
+          _buildFinancialRow('সাধারণ খরচ', summary.totalGeneralCost, Icons.receipt),
+          const SizedBox(height: 8),
+          Divider(color: Colors.grey[300]),
+          const SizedBox(height: 8),
+          _buildFinancialRow('নেট সঞ্চয়', summary.netSavings, Icons.account_balance,
+              isTotal: true, color: summary.netSavings >= 0 ? Colors.green : Colors.red),
+        ],
+      ),
+    );
+  }
+
+// Update _buildFinancialRow to accept color parameter
+  Widget _buildFinancialRow(String label, double amount, IconData icon,
+      {bool isTotal = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: color ?? (isTotal ? Colors.green : Colors.green), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+                color: color ?? (isTotal ? Colors.green : Colors.black87),
+              ),
+            ),
+          ),
+          Text(
+            _currencyFormat.format(amount),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color ?? (isTotal ? Colors.green : Colors.green),
+              fontSize: isTotal ? 16 : 14,
+            ),
           ),
         ],
       ),
@@ -542,81 +619,6 @@ class _CashboxScreenState extends ConsumerState<CashboxScreen> {
     );
   }
 
-  Widget _buildFinancialOverview(CashboxSummary summary) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.analytics, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                'আর্থিক সারাংশ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildFinancialRow('মোট ঋণ প্রদান', summary.totalLoanGiven, Icons.credit_card),
-          _buildFinancialRow('ঋণ বাকি', summary.totalLoanPending, Icons.pending_actions),
-          _buildFinancialRow('ঋণ আদায়', summary.totalLoanCollected, Icons.payment),
-          _buildFinancialRow('মোট সঞ্চয়', summary.totalSavings, Icons.savings),
-          _buildFinancialRow('মোট উত্তোলন', summary.totalWithdrawals, Icons.money_off),
-          const SizedBox(height: 8),
-          Divider(color: Colors.grey[300]),
-          const SizedBox(height: 8),
-          _buildFinancialRow('নিট ব্যালেন্স', summary.currentBalance, Icons.account_balance,
-              isTotal: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinancialRow(String label, double amount, IconData icon, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: isTotal ? Colors.green : Colors.green, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-                color: isTotal ? Colors.green : Colors.black87,
-              ),
-            ),
-          ),
-          Text(
-            _currencyFormat.format(amount),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isTotal ? Colors.green : Colors.green,
-              fontSize: isTotal ? 16 : 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
 
 }
