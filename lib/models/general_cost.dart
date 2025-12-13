@@ -1,4 +1,5 @@
 // models/general_cost.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 class GeneralCost {
   final String? id;
   final double amount;
@@ -20,20 +21,51 @@ class GeneralCost {
     return {
       'amount': amount,
       'note': note,
-      'date': date.millisecondsSinceEpoch,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'date': date,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 
   factory GeneralCost.fromMap(String id, Map<String, dynamic> map) {
-    return GeneralCost(
-      id: id,
-      amount: (map['amount'] ?? 0.0).toDouble(),
-      note: map['note'] ?? '',
-      date: DateTime.fromMillisecondsSinceEpoch(map['date']),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt']),
-    );
+    try {
+      // Helper function to parse dates
+      DateTime parseDate(dynamic dateField) {
+        if (dateField == null) return DateTime.now();
+
+        if (dateField is Timestamp) {
+          return dateField.toDate();
+        } else if (dateField is DateTime) {
+          return dateField;
+        } else if (dateField is String) {
+          return DateTime.parse(dateField);
+        } else if (dateField is int) {
+          return DateTime.fromMillisecondsSinceEpoch(dateField);
+        }
+        return DateTime.now();
+      }
+
+      return GeneralCost(
+        id: id,
+        amount: (map['amount'] ?? 0.0).toDouble(),
+        note: map['note']?.toString() ?? '',
+        date: parseDate(map['date']),
+        createdAt: parseDate(map['createdAt']),
+        updatedAt: parseDate(map['updatedAt']),
+      );
+    } catch (e) {
+      print('Error parsing GeneralCost: $e');
+      print('Map data: $map');
+      // Return a default cost object if parsing fails
+      final now = DateTime.now();
+      return GeneralCost(
+        id: id,
+        amount: (map['amount'] ?? 0.0).toDouble(),
+        note: map['note']?.toString() ?? 'পার্সিং ত্রুটি',
+        date: now,
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
   }
 }

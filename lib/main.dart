@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:insaf_somiti/screens/all_members_screen.dart';
+import 'package:insaf_somiti/screens/cashbox_savings_screen.dart';
 import 'package:insaf_somiti/screens/cashbox_screen.dart';
 import 'package:insaf_somiti/screens/loan_application_screen.dart';
 import 'package:insaf_somiti/screens/profile_entry_screen.dart';
@@ -1032,7 +1033,7 @@ class HomePage extends StatelessWidget {
           if(index==1){
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CashboxScreen()),
+              MaterialPageRoute(builder: (context) => SimpleCashDashboard()),
             );
           }
         },
